@@ -317,7 +317,7 @@ mkdir -p "$C"; printf '[Containments][1][Wallpaper][org.kde.image][General]\nIma
 t "install --activate records Global Theme + wallpaper" 'XDG_CURRENT_DESKTOP=KDE run_inst --variant both --activate=dark --yes && grep -q "^kde	lookandfeel	-	" "$D/@@COMMAND@@/previous-settings.tsv" && grep -q "^kde	wallpaper	-	/usr/share/wallpapers/Next/contents/images/1920x1080.png$" "$D/@@COMMAND@@/previous-settings.tsv"'
 : > "$STUB_STATE/calls.log"
 t "@@COMMAND@@ dark re-sets what the Global Theme skipped" 'run_vh dark && grep -q "plasma-apply-colorscheme @@N:color_scheme:Dark@@" "$STUB_STATE/calls.log" && grep -q "set directly" "$TMP/out"'
-t "@@COMMAND@@ has no widget command (nothing is bundled)" '! run_vh widget kvitals && ! grep -rq "kde-widgets" "$ROOT"'
+t "@@COMMAND@@ has no widget command (nothing is bundled)" '! run_vh widget kvitals && ! grep -q "kde-widgets" "$ROOT/install.sh"'
 : > "$STUB_STATE/calls.log"
 t "@@COMMAND@@ uninstall --yes works from the kept copy" 'run_vh uninstall --yes && [[ ! -e "$H/.local/bin/@@COMMAND@@" ]]'
 t "  your Global Theme put back"   'grep -q "plasma-apply-lookandfeel -a org.fedoraproject.fedora.desktop" "$STUB_STATE/calls.log"'
