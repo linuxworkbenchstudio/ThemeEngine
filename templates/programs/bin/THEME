@@ -112,25 +112,6 @@ ui_go()   { printf '    %s%s%s %s%-14s%s %s\n' "$PK" "$G_GO" "$R" "$MV" "$1" "$R
 ui_note() { printf '      %s%s%s\n' "$MU" "$*" "$R"; }
 ui_done() { printf '\n  %s%s%s\n\n' "$BO$PK" "$1" "$R"; [ -n "${2:-}" ] && printf '  %s%s%s\n\n' "$MU" "$2" "$R"; return 0; }
 
-if [ "$v" = "widget" ]; then   # @@COMMAND@@ widget kvitals|panel-colorizer: install a bundled copy for you
-  case "${2:-}" in
-    kvitals) id=org.kde.plasma.kvitals ;; panel-colorizer) id=luisbocanegra.panel.colorizer ;;
-    *) echo "usage: @@COMMAND@@ widget kvitals|panel-colorizer" >&2; exit 2 ;;
-  esac
-  L="$STATE/uninstaller/lib/common.sh"; SRC="$STATE/widgets/$id"
-  [ -f "$L" ] && [ -d "$SRC" ] || { echo "The bundled widgets aren't here - run the @@NAME@@ installer again." >&2; exit 1; }
-  for d in /usr/share/plasma/plasmoids "$DATA/plasma/plasmoids"; do
-    [ -d "$d/$id" ] && { ui_ok "${2}" "already installed"; exit 0; }
-  done
-  # recorded in @@NAME@@'s install record, so the uninstaller removes it again
-  # shellcheck source=/dev/null
-  ( . "$L"; vh_manifest_load; vh_install_tree kde-widgets "$SRC" "$VH_DATA/plasma/plasmoids/$id" README.md && vh_manifest_save ) >/dev/null ||
-    { echo "could not install $id" >&2; exit 1; }
-  find "$DATA/plasma/plasmoids/$id" -path '*/tools/*' \( -name '*.sh' -o -name '*.py' \) -exec chmod 755 {} + 2>/dev/null || true
-  ui_ok "${2}" "installed for you - build the panel: @@COMMAND@@ panel --apply"
-  exit 0
-fi
-
 if [ "$v" = "uninstall" ]; then   # the uninstaller the installer keeps a copy of
   U="$STATE/uninstaller/uninstall.sh"
   [ -x "$U" ] || { echo "No uninstaller copy at $U - run ./uninstall.sh from the @@NAME@@ folder." >&2; exit 1; }
@@ -555,7 +536,7 @@ print('@@NAME@@ panel restyled: $NEW (' + n + ' Panel Colorizer widget)');"
       printf '       %sLauncher  Task Manager  Clock (centre)  KVitals stats  System Tray%s\n' "$MU" "$R"
       printf '    %s4%s  style it with Panel Colorizer: %s%s%s\n' "$PK" "$R" "$PE" "$PRESET_NAME" "$R"
       printf '       %slooks: --look Normal %s Transparent %s Invisible %s Cards %s Pills %s Fancy  (each has a Light twin)%s\n' "$MU" "$G_DOT" "$G_DOT" "$G_DOT" "$G_DOT" "$G_DOT" "$R"
-      printf '       %s--plain for no Panel Colorizer; it needs the widget (./install.sh --panel-colorizer)%s\n' "$MU" "$R"
+      printf '       %s--plain for no Panel Colorizer; it needs the Panel Colorizer widget (see the README: Needs)%s\n' "$MU" "$R"
       ui_done "Run it:  @@COMMAND@@ panel --apply" "Undo any time: @@COMMAND@@ panel --restore" ;;
     *) echo "usage: @@COMMAND@@ panel [--apply [--look NAME|--plain|--only] [--variant dark|light]|--look NAME|--restyle [dark|light]|--restore]" >&2; exit 2 ;;
   esac

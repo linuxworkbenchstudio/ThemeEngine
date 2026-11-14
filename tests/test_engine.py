@@ -131,7 +131,7 @@ class Packs(unittest.TestCase):
         self.assertEqual(sorted(build(p)), ["konsole/Test-Theme-Dark.colorscheme", "konsole/Test-Theme-Dark.profile"])
         w = load(ROOT / "packs" / "waypoint")
         self.assertEqual((w.brand, w.version, w.lookandfeel_id, w.previous_ids),
-                         ("The Linux Workbench", "0.1.0", "org.thelinuxworkbench.waypoint", ["org.waypoint"]))
+                         ("The Linux Workbench", "0.1.1", "org.thelinuxworkbench.waypoint", ["org.waypoint"]))
 
     def test_every_part_by_default(self):
         p = load(write_pack(MINIMAL.replace('parts = ["kde-colors", "konsole"]\n', "")))

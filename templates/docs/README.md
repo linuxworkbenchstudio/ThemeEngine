@@ -34,7 +34,8 @@ By @@BRAND@@.
 That starts **@@NAME@@ Setup**, a guided installer in the terminal (needs Python 3). Nothing
 changes until you press Install on its Review screen. It shows what your choices need (Kvantum,
 qdbus, the KVitals and Panel Colorizer widgets, Fastfetch …) and installs a missing program only if
-you say so. Everything goes into your home folder; nothing outside it is touched.
+you say so. The two widgets are not bundled: see **Needs** below. You can quit Setup, add them, and
+run it again. Everything goes into your home folder; nothing outside it is touched.
 
 Without the guide:
 
@@ -66,9 +67,24 @@ It removes exactly what the installer put in, keeps any file you changed, and pu
 before @@NAME@@ back.
 
 ## Requirements
-KDE Plasma 6. Optional: Kvantum (the app style), Panel Colorizer and KVitals (the top panel; both
-are bundled and installed for your user if you want), Fastfetch, Papirus icons, Python 3 (Setup,
+KDE Plasma 6. Optional: Kvantum (the app style), Fastfetch, Papirus icons, Python 3 (Setup,
 Settings, Fastfetch colours).
+
+## Needs (the top panel)
+The top panel uses two widgets made by other people. @@NAME@@ does not bundle or change them, so
+you stay in control of what is installed:
+
+- **Panel Colorizer** by Luis Bocanegra gives the panel its look (not needed for the *Standard* look).
+  Arch: `paru -S plasma6-applets-panel-colorizer` (AUR). Fedora/openSUSE: package
+  `plasma-panel-colorizer` from the author's repository (github.com/luisbocanegra/plasma-panel-colorizer).
+  Any distro: right-click the panel > Add or manage widgets > Get new widgets > "Panel Colorizer"
+  (https://store.kde.org/p/2130967). It needs spectacle, python-dbus and python-gobject.
+- **KVitals** by Yassine Amjad shows CPU, RAM, GPU and network stats. Arch: `paru -S plasma6-applets-kvitals-git`
+  (AUR). Any distro: Get new widgets > "KVitals", or github.com/yassine20011/kvitals. It needs lm_sensors.
+
+The installer checks for both. With an AUR helper it can install them for you; otherwise it tells you
+where to get them and lets you exit, install them, and come back. Without them the theme still installs;
+the panel is just plainer.
 
 ## Credits and licences
 See LICENSE (which part is under which licence) and LICENSES/. Built with the theme engine of

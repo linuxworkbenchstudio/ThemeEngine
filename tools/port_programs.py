@@ -32,7 +32,7 @@ LAYOUT = [("kde/plasma/look-and-feel/", "look-and-feel/"), ("kde/plasma/desktopt
           ("kde/plasma/wallpapers/", "wallpapers/"), ("kde/panel/panel-colorizer/", "panel-colorizer/"),
           ("kde/optional-components/sddm", "sddm"), ("kde/colors/", "color-schemes/"), ("kde/aurorae/", "aurorae/themes/"),
           ("kde/kvantum/", "Kvantum/"), ("kde/konsole/", "konsole/"), ("kde/cursors/", "cursors/"), ("kde/gtk/", "gtk/"),
-          ("kde/panel/", "panel/"), ("kde/widgets", "widgets"), ("kde/bin/", "bin/"), ("kde/fastfetch/", "fastfetch/"),
+          ("kde/panel/", "panel/"), ("kde/bin/", "bin/"), ("kde/fastfetch/", "fastfetch/"),
           ("assets/icons/", "icons/"), ("assets/brand/hicolor", "hicolor"), ("scripts/lib/vh-common.sh", "lib/common.sh")]
 # per-edition names, in shell ($T = Dark/Light) - most specific first
 SH_NAMES = [

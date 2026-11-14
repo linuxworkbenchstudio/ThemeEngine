@@ -317,9 +317,9 @@ mkdir -p "$C"; printf '[Containments][1][Wallpaper][org.kde.image][General]\nIma
 t "install --activate records Global Theme + wallpaper" 'XDG_CURRENT_DESKTOP=KDE run_inst --variant both --activate=dark --yes && grep -q "^kde	lookandfeel	-	" "$D/@@COMMAND@@/previous-settings.tsv" && grep -q "^kde	wallpaper	-	/usr/share/wallpapers/Next/contents/images/1920x1080.png$" "$D/@@COMMAND@@/previous-settings.tsv"'
 : > "$STUB_STATE/calls.log"
 t "@@COMMAND@@ dark re-sets what the Global Theme skipped" 'run_vh dark && grep -q "plasma-apply-colorscheme @@N:color_scheme:Dark@@" "$STUB_STATE/calls.log" && grep -q "set directly" "$TMP/out"'
-t "@@COMMAND@@ widget installs a bundled copy (recorded)" 'run_vh widget kvitals && [[ -f "$D/plasma/plasmoids/org.kde.plasma.kvitals/metadata.json" ]] && grep -q "plasmoids/org.kde.plasma.kvitals/metadata.json" "$D/@@COMMAND@@/manifest.tsv"'
+t "@@COMMAND@@ has no widget command (nothing is bundled)" '! run_vh widget kvitals && ! grep -rq "kde-widgets" "$ROOT"'
 : > "$STUB_STATE/calls.log"
-t "@@COMMAND@@ uninstall --yes works from the kept copy" 'run_vh uninstall --yes && [[ ! -e "$H/.local/bin/@@COMMAND@@" && ! -e "$D/plasma/plasmoids/org.kde.plasma.kvitals" ]]'
+t "@@COMMAND@@ uninstall --yes works from the kept copy" 'run_vh uninstall --yes && [[ ! -e "$H/.local/bin/@@COMMAND@@" ]]'
 t "  your Global Theme put back"   'grep -q "plasma-apply-lookandfeel -a org.fedoraproject.fedora.desktop" "$STUB_STATE/calls.log"'
 new_home v16b
 t "a switch without the installer records your look too" 'XDG_CURRENT_DESKTOP=KDE run_inst --variant both --no-activate --yes && run_vh light && grep -q "^kde	colorscheme	-	BreezeDark$" "$D/@@COMMAND@@/previous-settings.tsv" && run_uninst --yes'
@@ -373,13 +373,13 @@ t "--no-deps asks nothing and installs nothing" 'XDG_CURRENT_DESKTOP=KDE run_ins
 new_home cachy
 NOAUR="$TMP/noaur"; rm -rf "$NOAUR"; cp -a "$STUBS" "$NOAUR"; rm -f "$NOAUR/yay" "$NOAUR/paru"
 printf '#!/usr/bin/env bash\necho "pacman $*" >> "$STUB_STATE/calls.log"\n[[ "$1" == -Si && "$2" == paru ]]\n' > "$NOAUR/pacman"; chmod +x "$NOAUR/pacman"
-t "No AUR helper (Fedora, CachyOS...): the bundled widgets are offered" 'PATH="$NOAUR:${PATH//$STUBS:/}" XDG_CURRENT_DESKTOP=KDE run_inst --variant dark --install-deps --dry-run && grep -q "Bundled with @@NAME@@" "$TMP/out" && grep -q "they go in with the theme" "$TMP/out" && ! grep -q "paru" "$TMP/out"'
-t "  --deps-report says bundled"  'PATH="$NOAUR:${PATH//$STUBS:/}" run_inst --deps-report && grep -q "^ITEM	KVitals	missing	.*	bundled:kvitals$" "$TMP/out" && grep -q "bundled:panel-colorizer$" "$TMP/out"'
+t "No AUR helper (Fedora, CachyOS...): the widgets are listed to get yourself" 'PATH="$NOAUR:${PATH//$STUBS:/}" XDG_CURRENT_DESKTOP=KDE run_inst --variant dark --install-deps --dry-run && grep -q "doesn.t bundle other people" "$TMP/out" && grep -q "Luis Bocanegra" "$TMP/out" && grep -q "Yassine Amjad" "$TMP/out" && ! grep -q "paru" "$TMP/out"'
+t "  --deps-report says manual, with where to get them" 'PATH="$NOAUR:${PATH//$STUBS:/}" run_inst --deps-report && grep -q "^ITEM	KVitals	missing	.*	manual: .*KDE Store" "$TMP/out" && grep -q "^ITEM	Panel Colorizer	missing	.*	manual: .*store.kde.org/p/2130967" "$TMP/out"'
 new_home widgets
-t "--widgets all installs both for your user" 'PATH="$NOAUR:${PATH//$STUBS:/}" run_inst --components kde-panel --widgets all --variant dark --yes && [[ -f "$D/plasma/plasmoids/org.kde.plasma.kvitals/metadata.json" && -f "$D/plasma/plasmoids/luisbocanegra.panel.colorizer/metadata.json" && -x "$D/plasma/plasmoids/luisbocanegra.panel.colorizer/contents/ui/tools/list_presets.sh" ]]'
-t "  then they count as installed" 'PATH="$NOAUR:${PATH//$STUBS:/}" run_inst --deps-report && grep -q "^ITEM	KVitals	ok" "$TMP/out" && grep -q "^ITEM	Panel Colorizer	ok" "$TMP/out"'
-t "  uninstall removes them"       'run_uninst --yes && [[ ! -e "$D/plasma/plasmoids/org.kde.plasma.kvitals" && ! -e "$D/plasma/plasmoids/luisbocanegra.panel.colorizer" ]]'
-t "--widgets rejects unknown names" '! run_inst --widgets neon --yes'
+t "--yes carries on without the widgets and installs none" 'PATH="$NOAUR:${PATH//$STUBS:/}" run_inst --components kde-panel --variant dark --yes && [[ ! -e "$D/plasma/plasmoids" ]]'
+t "  the install says they are missing" 'grep -q "Panel Colorizer not installed" "$TMP/out"'
+t "--widgets no longer exists" '! run_inst --widgets all --yes'
+t "Asked in a terminal: continue or exit and come back" 'grep -q "Continue without them?" "$ROOT/install.sh" && grep -q "Run ./install.sh again" "$ROOT/install.sh"'
 QD="$TMP/qdfedora"; mkdir -p "$QD"; printf '#!/bin/sh\nexit 0\n' > "$QD/qdbus-qt6"; chmod +x "$QD/qdbus-qt6"
 t "qdbus found under the Fedora name qdbus-qt6" '[[ "$(PATH="$QD:/usr/bin:/bin" bash -c ". $ROOT/lib/common.sh; vh_qdbus")" == qdbus-qt6 ]]'
 t "  and by the @@COMMAND@@ command" 'grep -q "qdbus-qt6" "$ROOT/bin/@@COMMAND@@"'

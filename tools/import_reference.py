@@ -36,7 +36,6 @@ LAYOUTS = {
         "panel/": "kde/panel/",
         "fastfetch/": "kde/fastfetch/",
         "bin/": "kde/bin/",
-        "widgets/": "kde/widgets/",
         "sddm/": "kde/optional-components/sddm/",
     },
     "waypoint": {"look-and-feel/org.thelinuxworkbench.waypoint.": "look-and-feel/org.waypoint."},   # else the same
@@ -92,10 +91,6 @@ ACCEPT = {
         {
             "path": "panel/*-panel.js",
             "why": "one panel script for every theme (Vice Horizon's, plus Waypoint's record of the look; 32 px; replaces any The Linux Workbench theme's panel)"
-        },
-        {
-            "path": "widgets/README.md",
-            "why": "the bundled widgets are shared by every theme now"
         },
         {
             "path": "look-and-feel/*",
@@ -162,10 +157,6 @@ ACCEPT = {
         {
             "path": "panel/*-panel.js",
             "why": "one panel script for every theme (Vice Horizon's, plus Waypoint's record of the look; 32 px)"
-        },
-        {
-            "path": "widgets/*",
-            "why": "one copy of the bundled widgets for every theme (Vice Horizon's; same versions, a few more files)"
         },
         {
             "path": "look-and-feel/*",
@@ -235,7 +226,6 @@ NEW_OK = {
         "gtk/*/gtk-4.0/gtk-dark.css",
         "gtk/*/index.theme",
         "icons/*",
-        "widgets/*",
         "setup.sh",
         "lib/*",
         "sddm/*",

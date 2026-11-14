@@ -238,6 +238,12 @@ def theme_page(pack, out: Path):
     <div><h3>COSMIC</h3>
       <ol><li>Download <code>{E(slug)}-COSMIC-{E(pack.version)}.zip</code> (a separate download) and unzip it.</li><li>Run <code>./install.sh</code>: it puts the two theme files and the wallpapers in place. Nothing in COSMIC changes by itself.</li><li>Open COSMIC Settings › Desktop › Appearance, choose Dark or Light, then Import, and pick the matching <code>.ron</code> file.</li><li>Pick the wallpaper in Settings › Desktop › Wallpaper › Add image.</li></ol></div>
   </div>
+  <h2>Needs (KDE panel)</h2>
+  <p class="note">The top panel uses two widgets made by other people. {E(pack.name)} doesn't bundle or change them, so you choose how to install them. The installer checks for both, can install them from the AUR if you use yay or paru, and otherwise tells you where to get them. You can exit, install them, and come back; without them the theme still installs and the panel is plainer.</p>
+  <div class="steps">
+    <div><h3>Panel Colorizer</h3><p class="note">by Luis Bocanegra. Gives the panel its look (not needed for the Standard look). Arch: <code>paru -S plasma6-applets-panel-colorizer</code>. Fedora and openSUSE: <code>plasma-panel-colorizer</code> from the author's repository. Any distro: right-click the panel › Add or manage widgets › Get new widgets, or <a href="https://store.kde.org/p/2130967">the KDE Store</a>.</p></div>
+    <div><h3>KVitals</h3><p class="note">by Yassine Amjad. CPU, RAM, GPU and network stats on the panel (needs lm_sensors). Arch: <code>paru -S plasma6-applets-kvitals-git</code>. Any distro: Get new widgets › KVitals, or <a href="https://github.com/yassine20011/kvitals">GitHub</a>.</p></div>
+  </div>
 </div></section>
 """
     SOON_BLOCK = f"""<section><div class="wrap">

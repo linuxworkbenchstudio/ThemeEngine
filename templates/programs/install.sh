@@ -10,7 +10,7 @@ VH_VERSION="$(cat "$VH_ROOT/VERSION" 2>/dev/null || echo unknown)"
 
 # ------------------------------------------------------------------ components
 ALL_COMPONENTS=(kde-colors kde-plasma kde-aurorae kde-kvantum kde-gtk kde-cursors kde-konsole kde-lookandfeel kde-wallpaper
-                kde-widgets kde-panel kde-command icons fastfetch)
+                kde-panel kde-command icons fastfetch)
 KDE_DEFAULT=(kde-colors kde-plasma kde-aurorae kde-kvantum kde-gtk kde-cursors kde-konsole kde-lookandfeel kde-wallpaper
              kde-panel kde-command icons)
 OPTIONAL=(fastfetch)
@@ -25,7 +25,6 @@ declare -A DESC=(
   [kde-konsole]="Konsole colour scheme + profile"
   [kde-lookandfeel]="Plasma Global Theme: colours, style, decoration, icons, cursors, wallpaper, splash"
   [kde-wallpaper]="Plasma wallpaper package (switches dark/light automatically)"
-  [kde-widgets]="Panel widgets KVitals + Panel Colorizer (bundled copies, for your user; only missing ones)"
   [kde-panel]="Top panel (KVitals stats, styled by Panel Colorizer) + presets; built only when you ask"
   [kde-command]="'@@COMMAND@@' command + @@NAME@@ Settings app + login sync helper"
   [icons]="@@NAME@@ icons: folders, apps, drives, file types + the launcher; inherits Papirus/Breeze"
@@ -60,14 +59,13 @@ Choose what to install:
 Extras:
       --panel                      build the @@NAME@@ top panel now (your panels are backed up)
       --no-panel                   don't build it and don't ask
-      --kvitals                    install the KVitals stats widget if missing (AUR with yay/paru,
-                                   otherwise the copy bundled with @@NAME@@, for your user)
-      --panel-colorizer            install Panel Colorizer if missing, the same way - it
-                                   styles the panel; without the flag the installer checks and asks
+      --kvitals                    install the KVitals stats widget from the AUR (needs yay or paru)
+      --panel-colorizer            install Panel Colorizer from the AUR (needs yay or paru)
+                                   @@NAME@@ doesn't bundle either widget. Without them the installer
+                                   lists where to get them; they are the authors' programs, not ours
       --panel-look NAME            panel look: Normal, Transparent, Invisible, Cards, Pills, Fancy
                                    (default) or Standard (no Panel Colorizer); --panel-style also works.
                                    Older names work: Base = Transparent, Islands = Pills, Plain = Normal
-      --widgets LIST               install the bundled copies now: kvitals, panel-colorizer (or all)
       --plain-panel                build the panel without Panel Colorizer
       --only-panel                 make it the only panel on the main screen (removes Plasma's
                                    default bottom panel; backed up, @@COMMAND@@ panel --restore)
@@ -124,7 +122,6 @@ targets_for() { # component variant -> human-readable target(s)
     kde-kvantum) echo "$VH_CONFIG/Kvantum/$(tw_name kvantum "$T")/" ;;
     kde-gtk) echo "$VH_DATA/themes/$(tw_name gtk "$T")/{gtk-3.0,gtk-4.0}/" ;;
     kde-cursors) echo "$VH_CURSORS/$(tw_name cursors "$T")/" ;;
-    kde-widgets) echo "$VH_DATA/plasma/plasmoids/{org.kde.plasma.kvitals,luisbocanegra.panel.colorizer}/" ;;
     kde-panel) echo "$VH_STATE_DIR/panel/ + $VH_CONFIG/panel-colorizer/presets/@@NAME@@*/" ;;
     kde-command) echo "$VH_BIN/@@COMMAND@@{,-settings} + autostart + app-menu entry" ;;
     fastfetch) echo "$VH_STATE_DIR/fastfetch/ + colours in your ~/.config/fastfetch/config.jsonc" ;;
@@ -187,20 +184,6 @@ inst_kde_panel() {
   for d in "$VH_ROOT"/panel-colorizer/*/; do
     d="${d%/}"
     vh_install_tree kde-panel "$d" "$VH_CONFIG/panel-colorizer/presets/$(basename -- "$d")" || rc=1
-  done
-  # copies of the bundled widgets, so @@NAME@@ Settings > Add-ons can add them later
-  vh_install_tree kde-panel "$VH_ROOT/widgets" "$VH_STATE_DIR/widgets" || rc=1
-  return $rc; }
-inst_kde_widgets() {
-  local w id src dst rc=0 seen=" "
-  for w in "${WIDGETS_WANT[@]}"; do
-    [[ "$seen" == *" $w "* ]] && continue; seen+="$w "
-    case "$w" in kvitals) id=org.kde.plasma.kvitals ;; panel-colorizer) id=luisbocanegra.panel.colorizer ;; esac
-    if [[ -d "/usr/share/plasma/plasmoids/$id" ]]; then vh_dim "$id: your system already has it"; continue; fi
-    src="$VH_ROOT/widgets/$id"; dst="$VH_DATA/plasma/plasmoids/$id"
-    vh_install_tree kde-widgets "$src" "$dst" README.md || rc=1
-    # helper scripts inside the widget must stay runnable
-    [[ "$VH_DRY_RUN" == 1 ]] || find "$dst" -path '*/tools/*' \( -name '*.sh' -o -name '*.py' \) -exec chmod 755 {} + 2>/dev/null || true
   done
   return $rc; }
 inst_kde_command() {
@@ -536,7 +519,7 @@ EOF
 
 # ------------------------------------------------------------------ main
 DESKTOP=""; VARIANT=""; COMPONENTS=(); WITH=(); WITHOUT=(); ACTIVATE=""; ALLOW_ROOT=0; INTERACTIVE=0; WANT_DEPS=""; FULL=""
-WIDGETS_WANT=(); AV_WANT=""; TEXT=0; DEPS_REPORT=0; LOG_FILE=""; NARGS=0; WANT_PANEL=""; WANT_KVITALS=0; WANT_PC=0; NO_AUTOSYNC=0; FF_DESIGN=0; PANEL_STYLE="Fancy"; PLAIN_PANEL=0; ONLY_PANEL=0
+AV_WANT=""; TEXT=0; DEPS_REPORT=0; LOG_FILE=""; NARGS=0; WANT_PANEL=""; WANT_KVITALS=0; WANT_PC=0; NO_AUTOSYNC=0; FF_DESIGN=0; PANEL_STYLE="Fancy"; PLAIN_PANEL=0; ONLY_PANEL=0
 MIGRATE=""; PANEL_STYLE_SET=0
 
 while [[ $# -gt 0 ]]; do
@@ -559,8 +542,6 @@ while [[ $# -gt 0 ]]; do
     --panel) WANT_PANEL=1 ;;
     --no-panel) WANT_PANEL=0 ;;
     --kvitals) WANT_KVITALS=1 ;;
-    --widgets) read -r -a _w <<<"$(split_list "${2:-}")"; WIDGETS_WANT+=("${_w[@]}"); shift ;;
-    --widgets=*) read -r -a _w <<<"$(split_list "${1#*=}")"; WIDGETS_WANT+=("${_w[@]}") ;;
     --panel-colorizer) WANT_PC=1 ;;
     --panel-look|--panel-style) PANEL_STYLE="${2:-}"; PANEL_STYLE_SET=1; shift ;;
     --panel-look=*|--panel-style=*) PANEL_STYLE="${1#*=}"; PANEL_STYLE_SET=1 ;;
@@ -629,14 +610,10 @@ case "$(tr '[:upper:]' '[:lower:]' <<<"$PANEL_STYLE")" in   # the six looks; nam
   standard) PANEL_STYLE=Fancy; PLAIN_PANEL=1 ;;
   *) vh_die "--panel-style must be Normal, Transparent, Invisible, Cards, Pills, Fancy or Standard (got '$PANEL_STYLE')" ;; esac
 case "$AV_WANT" in ""|dark|light) ;; *) vh_die "--activate= takes dark or light (got '$AV_WANT')" ;; esac
-_ww=(); for _w in "${WIDGETS_WANT[@]}"; do case "$_w" in
-  kvitals|panel-colorizer) _ww+=("$_w") ;; all) _ww+=(kvitals panel-colorizer) ;;
-  *) vh_die "--widgets takes kvitals, panel-colorizer or all (got '$_w')" ;; esac; done; WIDGETS_WANT=("${_ww[@]}")
 case "$DESKTOP" in kde) select_add "${KDE_DEFAULT[@]}" ;; ""|custom) ;; esac
 if [[ ${#COMPONENTS[@]} -gt 0 ]]; then SELECTED=(); select_add "${COMPONENTS[@]}"; fi
 select_add "${WITH[@]}"
 select_del "${WITHOUT[@]}"
-[[ ${#WIDGETS_WANT[@]} -gt 0 ]] && select_add kde-widgets
 for c in "${!SELECTED[@]}"; do valid_component "$c" || vh_die "unknown component '$c' (see --list)"; done
 resolve_deps
 [[ ${#SELECTED[@]} -gt 0 ]] || vh_die "nothing selected"
@@ -665,19 +642,15 @@ need() {
     [[ -n "$pkg" ]] && REQ_PKGS+=("$pkg") || REQ_MANUAL+=("$label: install it with your package manager")
   fi
 }
-widget_wanted() { local w; for w in "${WIDGETS_WANT[@]}"; do [[ "$w" == "$1" ]] && return 0; done; return 1; }
-REQ_BUNDLED=()
-need_widget() { # LABEL WHY plasmoid-id aur-package key
+REQ_WMANUAL=()
+HOW_KVITALS="from the KDE Store (right-click the panel > Add or manage widgets > Get new widgets > search KVitals, by Yassine Amjad), or github.com/yassine20011/kvitals. It also needs lm_sensors"
+HOW_PC="from the KDE Store (right-click the panel > Add or manage widgets > Get new widgets > search Panel Colorizer, by Luis Bocanegra), or store.kde.org/p/2130967. Fedora/openSUSE: package plasma-panel-colorizer from the author's repository, see github.com/luisbocanegra/plasma-panel-colorizer. Needs spectacle, python-dbus and python-gobject"
+need_widget() { # LABEL WHY plasmoid-id aur-package how-to-get-it
   local cmd
   if widget_installed "$3"; then req_ok "$1" "$2"; return 0; fi
-  if widget_wanted "$5"; then   # asked for already (--widgets): the bundled copy goes in with the theme
-    REPORT+=("$1"$'\t'ok$'\t'"$2"$'\t'-)
-    [[ $DEPS_REPORT -eq 1 ]] || printf '    %s%s%s %-20s %s%s%s\n' "$C_OK" "$G_OK" "$C_R" "$1" "$C_MUTED" "bundled copy is installed with the theme" "$C_R"
-    return 0
-  fi
   req_miss "$1" "$2"
   if [[ -n "$AUR" ]]; then REQ_AUR+=("$4"); cmd="$AUR -S --needed $4"
-  else REQ_BUNDLED+=("$5"); cmd="bundled:$5"; fi
+  else REQ_WMANUAL+=("$1"$'\t'"$5"); cmd="manual: $5"; fi
   REPORT+=("$1"$'\t'missing$'\t'"$2"$'\t'"$cmd")
 }
 ask_full() {
@@ -723,8 +696,8 @@ check_requirements() {
     need "dbus-monitor" "the login sync helper" "vh_have dbus-monitor" dbus dbus-tools dbus-1-tools dbus-bin
   fi
   if component_selected kde-panel; then
-    need_widget "KVitals" "CPU, RAM, GPU and network stats on the panel" org.kde.plasma.kvitals plasma6-applets-kvitals-git kvitals
-    [[ $PLAIN_PANEL -eq 1 ]] || need_widget "Panel Colorizer" "gives the top panel its @@NAME@@ look" luisbocanegra.panel.colorizer plasma6-applets-panel-colorizer panel-colorizer
+    need_widget "KVitals" "CPU, RAM, GPU and network stats on the panel" org.kde.plasma.kvitals plasma6-applets-kvitals-git "$HOW_KVITALS"
+    [[ $PLAIN_PANEL -eq 1 ]] || need_widget "Panel Colorizer" "gives the top panel its @@NAME@@ look" luisbocanegra.panel.colorizer plasma6-applets-panel-colorizer "$HOW_PC"
   fi
   if component_selected fastfetch; then
     need "Python 3" "recolours Fastfetch" "vh_have python3" python python3 python3 python3
@@ -749,23 +722,25 @@ check_requirements() {
     for c in "${cmds[@]}"; do vh_line "$c"; done
   fi
   for c in "${REQ_MANUAL[@]}"; do vh_warn "$c"; done
-  if [[ ${#REQ_BUNDLED[@]} -gt 0 ]]; then
-    vh_sub "Bundled with @@NAME@@ (installed for your user, no password)"
-    vh_row "$(printf '%s ' "${REQ_BUNDLED[@]}")" ""
-    local take=0 w
-    if [[ "$WANT_DEPS" == 1 ]]; then take=1
-    elif [[ "$WANT_DEPS" != 0 ]] && can_ask && vh_confirm "Install the bundled widgets?" y; then take=1; fi
-    for w in "${REQ_BUNDLED[@]}"; do
-      if [[ $take -eq 1 ]] || { [[ $w == kvitals && $WANT_KVITALS -eq 1 ]]; } || { [[ $w == panel-colorizer && $WANT_PC -eq 1 ]]; }; then
-        WIDGETS_WANT+=("$w"); select_add kde-widgets
-      fi
-    done
-    component_selected kde-widgets && vh_ok "they go in with the theme"
+  if [[ ${#REQ_WMANUAL[@]} -gt 0 ]]; then
+    vh_sub "Panel widgets to get yourself (@@NAME@@ doesn't bundle other people's software)"
+    local wm
+    for wm in "${REQ_WMANUAL[@]}"; do vh_row "${wm%%$'\t'*}" ""; vh_line "${wm#*$'\t'}"; done
   fi
   if [[ ${#cmds[@]} -gt 0 ]]; then
     if [[ "$WANT_DEPS" == 1 ]]; then do_main=1
     elif [[ "$WANT_DEPS" != 0 ]] && can_ask && vh_confirm "Install the missing programs now? (asks for your password)" y; then do_main=1
     elif [[ $aur_only -eq 1 ]]; then REQ_PKGS=(); do_main=1; fi
+  fi
+  # widgets still missing after that: the person can leave, add them, and come back
+  local wleft=${#REQ_WMANUAL[@]}; (( do_main )) || wleft=$((wleft + ${#REQ_AUR[@]}))
+  if (( wleft > 0 )) && can_ask; then
+    echo
+    vh_info "The @@NAME@@ panel uses the widgets above. You can add them now, then run this installer again."
+    vh_info "Nothing has been changed yet."
+    if ! vh_confirm "Continue without them? (No = exit so you can add them first)" y; then
+      vh_info "ok - nothing was changed. Run ./install.sh again once they are installed."; exit 0
+    fi
   fi
   if [[ ${#REQ_OPT[@]} -gt 0 && -n "$PM" ]]; then
     vh_sub "Recommended"

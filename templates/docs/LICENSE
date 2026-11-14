@@ -10,8 +10,8 @@ texts are in LICENSES/, and each installed folder carries its own copy (COPYING)
    (look-and-feel/), the Panel Colorizer presets (panel-colorizer/) and the documentation.
    Kvantum/ is derived from the KvArc and KvArcDark themes shipped with Kvantum
    (https://github.com/tsujan/Kvantum), Copyright Tsu Jan, GPL-3.0-or-later; colours changed.
-   widgets/: KVitals (Yassine Amjad) and Panel Colorizer (Luis Bocanegra), unchanged copies,
-   GPL-3.0 (see their own LICENSE files).
+   KVitals (Yassine Amjad) and Panel Colorizer (Luis Bocanegra) are not part of this package;
+   they are the authors' own programs, installed separately under their own licences.
 
    This program is free software: you can redistribute it and/or modify it under the terms of the
    GNU General Public License as published by the Free Software Foundation, either version 3 of
