@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+- The installer can now download Panel Colorizer and KVitals from the KDE Store for you (it asks first; your user only, no password; checks the Store's checksum) on distros without an AUR helper, such as Fedora. Exit-and-come-back and manual install still work.
+- Fixed: the top panel is now built for the edition you switch on. Before, it followed whichever colour scheme was active before the install, so a Dark install could get the Light panel look.
+- Fixed: hints no longer point to AUR-only options on other distros; the "get it yourself" lines no longer look like commands.
+
 ## 0.1.1 — widgets are no longer bundled
 - Panel Colorizer (Luis Bocanegra) and KVitals (Yassine Amjad) are not included in the zip any more.
   The installer checks for them, installs from the AUR if you use yay or paru, and otherwise lists

@@ -59,10 +59,10 @@ Choose what to install:
 Extras:
       --panel                      build the @@NAME@@ top panel now (your panels are backed up)
       --no-panel                   don't build it and don't ask
-      --kvitals                    install the KVitals stats widget from the AUR (needs yay or paru)
-      --panel-colorizer            install Panel Colorizer from the AUR (needs yay or paru)
-                                   @@NAME@@ doesn't bundle either widget. Without them the installer
-                                   lists where to get them; they are the authors' programs, not ours
+      --kvitals                    get the KVitals stats widget (AUR with yay/paru, else the KDE Store)
+      --panel-colorizer            get Panel Colorizer (AUR with yay/paru, else the KDE Store)
+                                   @@NAME@@ doesn't bundle either widget. They are other people's
+                                   programs; the installer asks before fetching them, or lists where to get them
       --panel-look NAME            panel look: Normal, Transparent, Invisible, Cards, Pills, Fancy
                                    (default) or Standard (no Panel Colorizer); --panel-style also works.
                                    Older names work: Base = Transparent, Islands = Pills, Plain = Normal
@@ -645,13 +645,55 @@ need() {
 REQ_WMANUAL=()
 HOW_KVITALS="from the KDE Store (right-click the panel > Add or manage widgets > Get new widgets > search KVitals, by Yassine Amjad), or github.com/yassine20011/kvitals. It also needs lm_sensors"
 HOW_PC="from the KDE Store (right-click the panel > Add or manage widgets > Get new widgets > search Panel Colorizer, by Luis Bocanegra), or store.kde.org/p/2130967. Fedora/openSUSE: package plasma-panel-colorizer from the author's repository, see github.com/luisbocanegra/plasma-panel-colorizer. Needs spectacle, python-dbus and python-gobject"
-need_widget() { # LABEL WHY plasmoid-id aur-package how-to-get-it
+REQ_WSTORE=()
+STORE_API="${LWBS_STORE_API:-https://api.kde-look.org/ocs/v1}"
+need_widget() { # LABEL WHY plasmoid-id aur-package how-to-get-it store-id flag
   local cmd
   if widget_installed "$3"; then req_ok "$1" "$2"; return 0; fi
   req_miss "$1" "$2"
   if [[ -n "$AUR" ]]; then REQ_AUR+=("$4"); cmd="$AUR -S --needed $4"
-  else REQ_WMANUAL+=("$1"$'\t'"$5"); cmd="manual: $5"; fi
+  else REQ_WMANUAL+=("$1"$'\t'"$5"); REQ_WSTORE+=("$1"$'\t'"$7"$'\t'"$6"$'\t'"$3"); cmd="store:$7:$6 $5"; fi
   REPORT+=("$1"$'\t'missing$'\t'"$2"$'\t'"$cmd")
+}
+# store_install LABEL STORE-ID PLASMOID-ID: fetch a widget from the KDE Store for this user only
+store_install() {
+  local label="$1" id="$2" pid="$3" tmp meta url name md5 ver sum
+  if [[ "$VH_DRY_RUN" == 1 ]]; then vh_dim "would download $label from the KDE Store (store.kde.org/p/$id)"; return 0; fi
+  local t; for t in curl python3 kpackagetool6; do
+    vh_have "$t" || { vh_warn "$label: the KDE Store download needs $t - get $label yourself (see above)"; return 1; }
+  done
+  tmp="$(mktemp -d)" || return 1
+  if ! curl -fsSL --max-time 30 --max-filesize 1000000 "$STORE_API/content/data/$id" -o "$tmp/meta.xml" 2>/dev/null; then
+    vh_warn "$label: couldn't reach the KDE Store - get it yourself (see above)"; rm -rf "$tmp"; return 1
+  fi
+  meta="$(python3 -I - "$tmp/meta.xml" <<'PY' 2>/dev/null
+import sys, os, re
+import xml.etree.ElementTree as ET
+c = ET.parse(sys.argv[1]).getroot().find(".//content")
+ver = (c.findtext("version") or "").strip()
+for n in range(1, 21):
+    link = (c.findtext(f"downloadlink{n}") or "").strip()
+    name = os.path.basename((c.findtext(f"downloadname{n}") or link).strip())
+    local_ok = os.environ.get("LWBS_STORE_API", "").startswith("http://127.0.0.1") and link.startswith("http://127.0.0.1")
+    if (link.startswith("https://") or local_ok) and re.search(r"\.(zip|plasmoid|tar\.gz|tar\.xz|tgz)$", name, re.I) and re.fullmatch(r"[\w.+-]+", name):
+        print("\t".join([link, name, (c.findtext(f"downloadmd5sum{n}") or "").strip(), ver]))
+        break
+PY
+)"
+  IFS=$'\t' read -r url name md5 ver <<<"$meta"
+  if [[ -z "$url" ]]; then vh_warn "$label: the KDE Store listing has no download I can use - get it yourself (see above)"; rm -rf "$tmp"; return 1; fi
+  vh_info "downloading $label ${ver:+$ver }($name) from the KDE Store"
+  if ! curl -fsSL --max-time 180 --max-filesize 30000000 "$url" -o "$tmp/$name" 2>/dev/null; then
+    vh_warn "$label: the download failed - get it yourself (see above)"; rm -rf "$tmp"; return 1
+  fi
+  if [[ -n "$md5" ]] && vh_have md5sum; then
+    sum="$(md5sum "$tmp/$name" | cut -d' ' -f1)"
+    [[ "$sum" == "$md5" ]] || { vh_warn "$label: the download didn't match the Store's checksum, so I did not install it"; rm -rf "$tmp"; return 1; }
+  fi
+  kpackagetool6 -t Plasma/Applet -i "$tmp/$name" >/dev/null 2>&1 || kpackagetool6 -t Plasma/Applet -u "$tmp/$name" >/dev/null 2>&1
+  rm -rf "$tmp"
+  if widget_installed "$pid"; then vh_ok "$label installed for your user"; return 0; fi
+  vh_warn "$label: installing the download didn't work - get it yourself (see above)"; return 1
 }
 ask_full() {
   [[ -z "$FULL" && -z "$WANT_DEPS" && -z "$WANT_PANEL" && -z "$ACTIVATE" ]] && can_ask || return 0
@@ -696,8 +738,13 @@ check_requirements() {
     need "dbus-monitor" "the login sync helper" "vh_have dbus-monitor" dbus dbus-tools dbus-1-tools dbus-bin
   fi
   if component_selected kde-panel; then
-    need_widget "KVitals" "CPU, RAM, GPU and network stats on the panel" org.kde.plasma.kvitals plasma6-applets-kvitals-git "$HOW_KVITALS"
-    [[ $PLAIN_PANEL -eq 1 ]] || need_widget "Panel Colorizer" "gives the top panel its @@NAME@@ look" luisbocanegra.panel.colorizer plasma6-applets-panel-colorizer "$HOW_PC"
+    need_widget "KVitals" "CPU, RAM, GPU and network stats on the panel" org.kde.plasma.kvitals plasma6-applets-kvitals-git "$HOW_KVITALS" 2347917 --kvitals
+    [[ $PLAIN_PANEL -eq 1 ]] || need_widget "Panel Colorizer" "gives the top panel its @@NAME@@ look" luisbocanegra.panel.colorizer plasma6-applets-panel-colorizer "$HOW_PC" 2130967 --panel-colorizer
+  fi
+  if component_selected kde-panel && [[ $PLAIN_PANEL -eq 0 ]]; then
+    need "Spectacle" "Panel Colorizer's preset previews" "vh_have spectacle" spectacle spectacle spectacle kde-spectacle optional
+    need "Python D-Bus" "Panel Colorizer's helper scripts" 'python3 -c "import dbus" 2>/dev/null' python-dbus python3-dbus python3-dbus-python python3-dbus optional
+    need "Python GObject" "Panel Colorizer's helper scripts" 'python3 -c "import gi" 2>/dev/null' python-gobject python3-gobject python3-gobject python3-gi optional
   fi
   if component_selected fastfetch; then
     need "Python 3" "recolours Fastfetch" "vh_have python3" python python3 python3 python3
@@ -723,9 +770,20 @@ check_requirements() {
   fi
   for c in "${REQ_MANUAL[@]}"; do vh_warn "$c"; done
   if [[ ${#REQ_WMANUAL[@]} -gt 0 ]]; then
-    vh_sub "Panel widgets to get yourself (@@NAME@@ doesn't bundle other people's software)"
+    vh_sub "Panel widgets (other people's software - @@NAME@@ doesn't bundle it)"
     local wm
-    for wm in "${REQ_WMANUAL[@]}"; do vh_row "${wm%%$'\t'*}" ""; vh_line "${wm#*$'\t'}"; done
+    for wm in "${REQ_WMANUAL[@]}"; do vh_row "${wm%%$'\t'*}" ""; printf '      %s%s%s\n' "$C_MUTED" "${wm#*$'\t'}" "$C_R"; done
+    # offer the KDE Store download: this user only, no password; --kvitals / --panel-colorizer say yes
+    local ws lab flag sid pid yes keep
+    for ws in "${REQ_WSTORE[@]}"; do
+      IFS=$'\t' read -r lab flag sid pid <<<"$ws"; yes=0
+      case "$flag" in --kvitals) [[ $WANT_KVITALS -eq 1 ]] && yes=1 ;; --panel-colorizer) [[ $WANT_PC -eq 1 ]] && yes=1 ;; esac
+      if (( ! yes )) && can_ask && vh_confirm "Download $lab from the KDE Store (store.kde.org/p/$sid) and install it for your user? (no password)" y; then yes=1; fi
+      if (( yes )) && store_install "$lab" "$sid" "$pid"; then
+        keep=(); for wm in "${REQ_WMANUAL[@]}"; do [[ "${wm%%$'\t'*}" == "$lab" ]] || keep+=("$wm"); done
+        REQ_WMANUAL=(${keep[@]+"${keep[@]}"})
+      fi
+    done
   fi
   if [[ ${#cmds[@]} -gt 0 ]]; then
     if [[ "$WANT_DEPS" == 1 ]]; then do_main=1
@@ -833,6 +891,9 @@ if component_selected kde-panel; then
   fi
   if [[ $PLAIN_PANEL -eq 1 ]]; then panel_args=(--plain); else panel_args=(--look "$PANEL_STYLE"); fi
   [[ $ONLY_PANEL -eq 1 ]] && panel_args+=(--only)
+  # build the panel for the edition being switched on, not for whatever colour scheme was active before
+  if [[ "${ACTIVATE:-0}" == 1 ]]; then panel_args+=(--variant "${AV_WANT:-${VARIANTS[0]}}")
+  elif [[ ${#VARIANTS[@]} -eq 1 ]]; then panel_args+=(--variant "${VARIANTS[0]}"); fi
   if [[ -z "$WANT_PANEL" ]]; then
     if can_ask && [[ $VH_IS_KDE -eq 1 ]] && vh_confirm "Set up the @@NAME@@ top panel now? (replaces your current top panel; it is backed up first)" y; then WANT_PANEL=1; else WANT_PANEL=0; fi
   fi

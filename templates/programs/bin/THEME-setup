@@ -402,9 +402,20 @@ def item_options(cmd):
     return ["Install", "Manual", "Skip"]
 
 
+def store_parts(cmd):
+    """'store:--flag:ID how...' -> (flag, id, how)"""
+    head, _, how = cmd.partition(" ")
+    _, flag, sid = head.split(":", 2)
+    return flag, sid, how
+
+
 def describe(cmd):
     if cmd.startswith("manual:"):
         return cmd[len("manual:"):].strip()
+    if cmd.startswith("store:"):
+        flag, sid, how = store_parts(cmd)
+        return (f"Install: downloads it from the KDE Store (store.kde.org/p/{sid}) and installs it for your user only - "
+                f"no password. Manual: get it yourself, {how}")
     return "$ " + cmd
 
 
@@ -500,7 +511,7 @@ def review_lines(picks, items, actions):
     inst = [it for i, it in enumerate(items) if it[1] != "ok" and actions[i] == "Install"]
     man = [it for i, it in enumerate(items) if it[1] != "ok" and actions[i] == "Manual"]
     for it in inst:
-        L.append(("Install", f"{it[0]}:  " + it[3]))
+        L.append(("Install", f"{it[0]}:  " + ("from the KDE Store, for your user" if it[3].startswith("store:") else it[3])))
     for it in man:
         L.append(("Do yourself", f"{it[0]} (Quit now, add it, run @@COMMAND@@-setup again; or carry on and add it later)"))
     return L
@@ -717,9 +728,11 @@ def setup(scr, pkg, print_only, result):
             else:
                 break
     chosen = [it for i, it in enumerate(items) if it[1] != "ok" and actions[i] == "Install"]
-    todo = [(it[0], it[3]) for it in chosen]
-    manual = [(it[0], it[3]) for i, it in enumerate(items) if it[1] != "ok" and actions[i] == "Manual"]
-    cmd = ([str(Path(pkg) / "install.sh")] + install_args(picks)
+    todo = [(it[0], it[3]) for it in chosen if not it[3].startswith("store:")]
+    store_flags = [store_parts(it[3])[0] for it in chosen if it[3].startswith("store:")]
+    manual = [(it[0], ("manual: " + store_parts(it[3])[2]) if it[3].startswith("store:") else it[3])
+              for i, it in enumerate(items) if it[1] != "ok" and actions[i] == "Manual"]
+    cmd = ([str(Path(pkg) / "install.sh")] + install_args(picks) + store_flags
            + (["--allow-root"] if os.geteuid() == 0 else []))
     extra = []
     if picks["dim"] == "off" and picks["edition"] != "later":

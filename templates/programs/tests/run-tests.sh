@@ -374,12 +374,58 @@ new_home cachy
 NOAUR="$TMP/noaur"; rm -rf "$NOAUR"; cp -a "$STUBS" "$NOAUR"; rm -f "$NOAUR/yay" "$NOAUR/paru"
 printf '#!/usr/bin/env bash\necho "pacman $*" >> "$STUB_STATE/calls.log"\n[[ "$1" == -Si && "$2" == paru ]]\n' > "$NOAUR/pacman"; chmod +x "$NOAUR/pacman"
 t "No AUR helper (Fedora, CachyOS...): the widgets are listed to get yourself" 'PATH="$NOAUR:${PATH//$STUBS:/}" XDG_CURRENT_DESKTOP=KDE run_inst --variant dark --install-deps --dry-run && grep -q "doesn.t bundle other people" "$TMP/out" && grep -q "Luis Bocanegra" "$TMP/out" && grep -q "Yassine Amjad" "$TMP/out" && ! grep -q "paru" "$TMP/out"'
-t "  --deps-report says manual, with where to get them" 'PATH="$NOAUR:${PATH//$STUBS:/}" run_inst --deps-report && grep -q "^ITEM	KVitals	missing	.*	manual: .*KDE Store" "$TMP/out" && grep -q "^ITEM	Panel Colorizer	missing	.*	manual: .*store.kde.org/p/2130967" "$TMP/out"'
+t "  --deps-report says manual, with where to get them" 'PATH="$NOAUR:${PATH//$STUBS:/}" run_inst --deps-report && grep -q "^ITEM	KVitals	missing	.*	store:--kvitals:2347917 .*KDE Store" "$TMP/out" && grep -q "^ITEM	Panel Colorizer	missing	.*	store:--panel-colorizer:2130967 .*store.kde.org/p/2130967" "$TMP/out"'
 new_home widgets
 t "--yes carries on without the widgets and installs none" 'PATH="$NOAUR:${PATH//$STUBS:/}" run_inst --components kde-panel --variant dark --yes && [[ ! -e "$D/plasma/plasmoids" ]]'
 t "  the install says they are missing" 'grep -q "Panel Colorizer not installed" "$TMP/out"'
 t "--widgets no longer exists" '! run_inst --widgets all --yes'
 t "Asked in a terminal: continue or exit and come back" 'grep -q "Continue without them?" "$ROOT/install.sh" && grep -q "Run ./install.sh again" "$ROOT/install.sh"'
+# ---- KDE Store download (a local stand-in for the Store; nothing leaves this machine)
+FS="$TMP/fakestore"; mkdir -p "$FS/site"
+python3 -I - "$FS/site" <<'PY'
+import sys, zipfile
+for pid in ("luisbocanegra.panel.colorizer", "org.kde.plasma.kvitals"):
+    with zipfile.ZipFile(f"{sys.argv[1]}/{pid}.zip", "w") as z:
+        z.writestr(f"{pid}/metadata.json", '{"KPlugin":{"Id":"%s"}}' % pid)
+PY
+cat > "$FS/serve.py" <<'PY'
+import http.server, hashlib, os, sys
+site, port_file = sys.argv[1], sys.argv[2]
+IDS = {"2130967": "luisbocanegra.panel.colorizer", "2347917": "org.kde.plasma.kvitals"}
+class H(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def do_GET(self):
+        port = self.server.server_address[1]
+        sid = self.path.rstrip("/").rsplit("/", 1)[-1]
+        if self.path.startswith("/ocs/v1/content/data/") and sid in IDS:
+            pid = IDS[sid]; data = open(f"{site}/{pid}.zip", "rb").read()
+            md5 = "0" * 32 if os.path.exists(site + "/../badmd5") else hashlib.md5(data).hexdigest()
+            body = (f"<ocs><data><content><version>1.2.3</version><downloadlink1>http://127.0.0.1:{port}/{pid}.zip</downloadlink1>"
+                    f"<downloadname1>{pid}.zip</downloadname1><downloadmd5sum1>{md5}</downloadmd5sum1></content></data></ocs>").encode()
+        elif self.path.endswith(".zip"):
+            body = open(site + self.path, "rb").read()
+        else:
+            self.send_response(404); self.end_headers(); return
+        self.send_response(200); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+s = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H)
+open(port_file, "w").write(str(s.server_address[1])); s.serve_forever()
+PY
+python3 -I "$FS/serve.py" "$FS/site" "$FS/port" & FSPID=$!
+for _ in $(seq 1 50); do [[ -s "$FS/port" ]] && break; sleep 0.1; done
+FSAPI="http://127.0.0.1:$(cat "$FS/port")/ocs/v1"
+printf '#!/usr/bin/env bash\npython3 -I - "${@: -1}" "$HOME/.local/share/plasma/plasmoids" <<'"'"'PY'"'"'\nimport sys, zipfile, json, os\nz = zipfile.ZipFile(sys.argv[1]); n = [x for x in z.namelist() if x.endswith("metadata.json")][0]\nd = os.path.join(sys.argv[2], json.loads(z.read(n))["KPlugin"]["Id"]); os.makedirs(d, exist_ok=True); z.extractall(d)\nPY\n' > "$NOAUR/kpackagetool6"; chmod +x "$NOAUR/kpackagetool6"
+new_home store
+t "KDE Store: --panel-colorizer --kvitals download and install for the user" 'PATH="$NOAUR:${PATH//$STUBS:/}" LWBS_STORE_API="$FSAPI" run_inst --components kde-panel --variant dark --yes --panel-colorizer --kvitals && [[ -d "$D/plasma/plasmoids/luisbocanegra.panel.colorizer" && -d "$D/plasma/plasmoids/org.kde.plasma.kvitals" ]]'
+t "  it says what it fetched, and nothing is left listed as missing" 'grep -q "Panel Colorizer 1.2.3" "$TMP/out" && grep -q "KVitals installed for your user" "$TMP/out" && ! grep -q "not installed" "$TMP/out"'
+new_home storebad; touch "$FS/badmd5"
+t "KDE Store: a download that fails the checksum is not installed" 'PATH="$NOAUR:${PATH//$STUBS:/}" LWBS_STORE_API="$FSAPI" run_inst --components kde-panel --variant dark --yes --panel-colorizer && grep -q "didn.t match the Store" "$TMP/out" && [[ ! -e "$D/plasma/plasmoids/luisbocanegra.panel.colorizer" ]]'
+rm -f "$FS/badmd5"; kill "$FSPID" 2>/dev/null
+new_home storedown
+t "KDE Store unreachable: warns, the theme still installs" 'PATH="$NOAUR:${PATH//$STUBS:/}" LWBS_STORE_API="http://127.0.0.1:1/ocs/v1" run_inst --components kde-panel --variant dark --yes --kvitals && grep -q "couldn.t reach the KDE Store" "$TMP/out" && grep -q "Install record" "$TMP/out"'
+new_home storeyes
+t "--yes alone never downloads anything" 'PATH="$NOAUR:${PATH//$STUBS:/}" LWBS_STORE_API="http://127.0.0.1:1/ocs/v1" run_inst --components kde-panel --variant dark --yes && ! grep -q "downloading" "$TMP/out" && [[ ! -e "$D/plasma/plasmoids" ]]'
+t "The panel is built for the edition being switched on (dark)" 'PATH="$NOAUR:${PATH//$STUBS:/}" XDG_CURRENT_DESKTOP=KDE run_inst --variant both --activate=dark --panel --dry-run && grep -q "panel --apply .*--variant dark" "$TMP/out"'
+t "  and for light" 'PATH="$NOAUR:${PATH//$STUBS:/}" XDG_CURRENT_DESKTOP=KDE run_inst --variant both --activate=light --panel --dry-run && grep -q "panel --apply .*--variant light" "$TMP/out"'
 QD="$TMP/qdfedora"; mkdir -p "$QD"; printf '#!/bin/sh\nexit 0\n' > "$QD/qdbus-qt6"; chmod +x "$QD/qdbus-qt6"
 t "qdbus found under the Fedora name qdbus-qt6" '[[ "$(PATH="$QD:/usr/bin:/bin" bash -c ". $ROOT/lib/common.sh; vh_qdbus")" == qdbus-qt6 ]]'
 t "  and by the @@COMMAND@@ command" 'grep -q "qdbus-qt6" "$ROOT/bin/@@COMMAND@@"'

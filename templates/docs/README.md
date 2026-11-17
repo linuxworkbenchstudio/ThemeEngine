@@ -82,9 +82,12 @@ you stay in control of what is installed:
 - **KVitals** by Yassine Amjad shows CPU, RAM, GPU and network stats. Arch: `paru -S plasma6-applets-kvitals-git`
   (AUR). Any distro: Get new widgets > "KVitals", or github.com/yassine20011/kvitals. It needs lm_sensors.
 
-The installer checks for both. With an AUR helper it can install them for you; otherwise it tells you
-where to get them and lets you exit, install them, and come back. Without them the theme still installs;
-the panel is just plainer.
+The installer checks for both and asks before it fetches anything. With an AUR helper (yay or paru) it can
+install them from the AUR. On other distros it can download them from the KDE Store and install them for
+your user only (no password), the same way Get New Widgets does; or you can exit, install them yourself
+(any route above), and come back. Without them the theme still installs; the panel is just plainer.
+Panel Colorizer's preset previews and scripts also use spectacle, python-dbus and python-gobject; the
+installer offers those from your package manager.
 
 ## Credits and licences
 See LICENSE (which part is under which licence) and LICENSES/. Built with the theme engine of

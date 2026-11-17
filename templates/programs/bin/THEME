@@ -466,13 +466,13 @@ if [ "$v" = "panel" ]; then
         for _ in $(seq 1 30); do $QDBUS org.kde.plasmashell /PlasmaShell >/dev/null 2>&1 && break; sleep 1; done
         sleep 3   # let the shell finish loading its panels before we edit them
       fi
-      on_disk org.kde.plasma.kvitals || ui_no "KVitals" "not installed - no stats on the panel (./install.sh --kvitals)"
+      on_disk org.kde.plasma.kvitals || ui_no "KVitals" "not installed - no stats on the panel (run ./install.sh again to get it, or Get New Widgets > KVitals)"
       PRE=""
       if [ $FANCY = 1 ]; then
         [ -f "$PRESET" ] || { echo "Missing $PRESET - run the @@NAME@@ installer first." >&2; exit 1; }
         if ! on_disk luisbocanegra.panel.colorizer; then
           ui_warn "Panel Colorizer is not installed - it gives the panel its @@NAME@@ look, so"
-          ui_note "the panel is built plain for now. Install it (./install.sh --panel-colorizer, or"
+          ui_note "the panel is built plain for now. Install it (run ./install.sh again to get it, or"
           ui_note "Add or Manage Widgets > Get New > 'Panel Colorizer'), then run: @@COMMAND@@ panel --apply"
         fi
         PRE="var @@PREFIX@@_FANCY = $(cat "$PRESET"); var @@PREFIX@@_STYLE_NAME = \"$PRESET_NAME\";"
