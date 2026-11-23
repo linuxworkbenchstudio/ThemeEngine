@@ -91,8 +91,10 @@ class Looks:
         p["shadow"]["background"]["enabled"] = False
 
     @staticmethod
-    def hide_plasma_bar(g):
-        g["nativePanel"]["background"] = {"enabled": True, "opacity": 0, "shadow": False}
+    def hide_plasma_bar(g, fully=False):
+        """Plasma's own bar: opacity 0 keeps it (and KWin's blur behind it); fully=True hides it ("Native panel >
+        Background" unticked), for the looks with no bar of their own: Cards, Pills, Invisible (22 Nov 2026)."""
+        g["nativePanel"]["background"] = {"enabled": not fully, "opacity": 0, "shadow": False}
 
     def plain_widgets(self, g):
         w = g["widgets"]["normal"]
@@ -142,7 +144,7 @@ class Looks:
         if variant == "light":
             self.lighten_preset(d)
         g = d["globalSettings"]
-        self.no_bar(g); self.hide_plasma_bar(g); self.plain_widgets(g)
+        self.no_bar(g); self.hide_plasma_bar(g, fully=True); self.plain_widgets(g)
         c = self.c
         text, glow, size, dy, a = ((c["light"], c["shadow"], 3, 1, 0.8) if variant == "dark"
                                    else (c["ink"], c["light"], 4, 0, 0.95))
@@ -156,7 +158,7 @@ class Looks:
 
     def pills(self):
         d = self.tpl("islands"); g = d["globalSettings"]
-        self.no_bar(g); self.hide_plasma_bar(g)
+        self.no_bar(g); self.hide_plasma_bar(g, fully=True)
         w = g["widgets"]["normal"]
         w["radius"] = {"enabled": True, "corner": {k: self.height // 2 for k in ("topLeft", "topRight", "bottomRight", "bottomLeft")}}
         w["shadow"]["background"]["enabled"] = False
@@ -165,7 +167,7 @@ class Looks:
 
     def cards(self):
         d = self.tpl("cards"); g = d["globalSettings"]
-        self.no_bar(g); self.hide_plasma_bar(g)
+        self.no_bar(g); self.hide_plasma_bar(g, fully=True)
         return d
 
     def deep_cards(self, d):

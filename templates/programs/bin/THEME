@@ -498,7 +498,6 @@ print(f);" 2>/dev/null | tail -n1 || true)"
       [ -n "${NEWFAM:-}" ] && FAM="$NEWFAM"
       NEW="$FAM"; [ "$EDITION" = light ] && NEW="$FAM Light"
       PF="$CONF/panel-colorizer/presets/$NEW/settings.json"
-      case "$FAM" in *" Cards"|*" Pills"|*" Invisible") OPM=opaque ;; *) OPM=adaptive ;; esac   # no blur behind a bar that is not drawn
       [ -f "$PF" ] || { echo "Missing $PF - run the @@NAME@@ installer first." >&2; exit 1; }
       $QDBUS org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "var S = $(cat "$PF");
 var ISL = !!(S.@@KEY@@ && S.@@KEY@@.islands);
@@ -514,7 +513,6 @@ panels().forEach(function (p) {
   });
   p.currentConfigGroup = ['General'];
   p.writeConfig('@@KEY@@Style', '$NEW');
-  p.opacityMode = '$OPM';
 });
 print('@@NAME@@ panel restyled: $NEW (' + n + ' Panel Colorizer widget)');"
       ui_ok "Top panel" "$NEW" ;;

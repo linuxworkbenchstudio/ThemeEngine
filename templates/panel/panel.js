@@ -135,9 +135,6 @@ if (typeof @PREFIX@_FANCY !== "undefined" && @PREFIX@_FANCY) {
                  : style.replace(/^@NAME@ /, "").replace(/ Light$/, "").toLowerCase();
         panel.writeConfig("@KEY@Style", style);
         panel.writeConfig("@KEY@Look", look);
-        // Cards, Pills and Invisible hide Plasma's own bar (opacity 0), but a translucent panel still has KWin blur
-        // the strip behind it, which leaves the bar's shape visible. An opaque panel asks for no blur.
-        panel.opacityMode = /^(cards|pills|invisible)$/.test(look) ? "opaque" : "adaptive";
         fancy = " Panel Colorizer: " + style + " applied.";
     } else {
         fancy = " Panel Colorizer is NOT installed - plain panel for now; Panel Colorizer is needed for the @NAME@ look (install it, then run @COMMAND@ panel --apply).";
