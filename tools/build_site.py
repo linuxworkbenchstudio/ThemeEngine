@@ -213,6 +213,20 @@ def theme_page(pack, out: Path):
         shutil.copyfile(pack.root / f"art/hicolor/256x256/apps/{pack.command}-launcher.png", dest / "logo.png")
     logo = "logo.svg" if (dest / "logo.svg").is_file() else "logo.png"
     walls = {m: wallpaper(pack, dest, m) for m in ("dark", "light")}
+    shots = {}   # packs/<id>/art/screenshots/<dark|light>-<kde|cosmic>.jpg, shown under the hero
+    for m in ("dark", "light"):
+        for k in ("kde", "cosmic"):
+            f = pack.root / "art" / "screenshots" / f"{m}-{k}.jpg"
+            if f.is_file():
+                shutil.copyfile(f, dest / f"screenshot-{m}-{k}.jpg")
+                shots[(m, k)] = f"screenshot-{m}-{k}.jpg"
+    def shots_html(m):
+        figs = "".join(f'<figure><a href="{shots[(m, k)]}"><img src="{shots[(m, k)]}" alt="{E(pack.name)} {m} on {lab}" loading="lazy"></a>'
+                       f"<figcaption>{lab}</figcaption></figure>"
+                       for k, lab in (("kde", "KDE Plasma 6"), ("cosmic", "COSMIC")) if (m, k) in shots)
+        return f'<div class="shots only-{m}">{figs}</div>'
+    shots_block = ('<section><div class="wrap"><h2>Screenshots</h2>' + shots_html("dark") + shots_html("light")
+                   + "</div></section>\n") if shots else ""
     tagline = pack.raw.get("theme", {}).get("programs", {}).get("tagline",
                                                                  f"A {pack.name} theme for KDE Plasma 6, in Dark and Light.")
     css = (BASE_CSS + THEME_CSS
@@ -274,7 +288,7 @@ def theme_page(pack, out: Path):
   <div class="version">{'Coming soon' if soon else 'Version ' + E(pack.version)} · KDE Plasma 6 and COSMIC · {E(pack.license)}</div>
 </div></div>
 
-<section><div class="wrap">
+{shots_block}<section><div class="wrap">
   <h2>Palette</h2>
   <div class="swatches" data-for="dark">{swatches(dark)}</div>
 </div></section>
@@ -291,7 +305,9 @@ def theme_page(pack, out: Path):
     # the swatches follow the edition shown
     body = body.replace(f'<div class="swatches" data-for="dark">{swatches(dark)}</div>',
                         f'<div class="swatches only-dark">{swatches(dark)}</div><div class="swatches only-light">{swatches(light)}</div>')
-    css += (".only-light { display: none; }\n"
+    css += (".shots { display: grid; gap: 18px; } .shots figure { margin: 0; } .shots img { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--line); }\n"
+            ".shots figcaption { margin-top: 6px; font-size: 13px; color: var(--muted); }\n"
+            ".only-light { display: none; }\n"
             ":root[data-mode='light'] .only-light { display: grid; } :root[data-mode='light'] .only-dark { display: none; }\n"
             "@media (prefers-color-scheme: light) { :root:not([data-mode='dark']) .only-light { display: grid; }"
             " :root:not([data-mode='dark']) .only-dark { display: none; } }\n")

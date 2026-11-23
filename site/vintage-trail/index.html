@@ -76,6 +76,8 @@ pre { background: var(--deep); border: 1px solid var(--line); border-radius: 10p
 :root .hero { background-image: url('wallpaper-dark.jpg'); }
 :root[data-mode='light'] .hero { background-image: url('wallpaper-light.jpg'); }
 @media (prefers-color-scheme: light) { :root:not([data-mode='dark']) .hero { background-image: url('wallpaper-light.jpg'); } }
+.shots { display: grid; gap: 18px; } .shots figure { margin: 0; } .shots img { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--line); }
+.shots figcaption { margin-top: 6px; font-size: 13px; color: var(--muted); }
 .only-light { display: none; }
 :root[data-mode='light'] .only-light { display: grid; } :root[data-mode='light'] .only-dark { display: none; }
 @media (prefers-color-scheme: light) { :root:not([data-mode='dark']) .only-light { display: grid; } :root:not([data-mode='dark']) .only-dark { display: none; } }

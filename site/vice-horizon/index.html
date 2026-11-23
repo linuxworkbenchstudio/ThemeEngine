@@ -76,6 +76,8 @@ pre { background: var(--deep); border: 1px solid var(--line); border-radius: 10p
 :root .hero { background-image: url('wallpaper-dark.jpg'); }
 :root[data-mode='light'] .hero { background-image: url('wallpaper-light.jpg'); }
 @media (prefers-color-scheme: light) { :root:not([data-mode='dark']) .hero { background-image: url('wallpaper-light.jpg'); } }
+.shots { display: grid; gap: 18px; } .shots figure { margin: 0; } .shots img { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--line); }
+.shots figcaption { margin-top: 6px; font-size: 13px; color: var(--muted); }
 .only-light { display: none; }
 :root[data-mode='light'] .only-light { display: grid; } :root[data-mode='light'] .only-dark { display: none; }
 @media (prefers-color-scheme: light) { :root:not([data-mode='dark']) .only-light { display: grid; } :root:not([data-mode='dark']) .only-dark { display: none; } }
@@ -97,9 +99,10 @@ pre { background: var(--deep); border: 1px solid var(--line); border-radius: 10p
     <a class="btn primary" href="https://github.com/linuxworkbenchstudio/lwbs-themes/releases?q=Vice Horizon">Download</a>
     <a class="btn ghost" href="https://github.com/linuxworkbenchstudio/lwbs-themes/tree/main/packs/vice-horizon">Source</a>
   </div>
-  <div class="version">Version 0.1.0 · KDE Plasma 6 and COSMIC · GPL-3.0-or-later</div>
+  <div class="version">Version 0.1.2 · KDE Plasma 6 and COSMIC · GPL-3.0-or-later</div>
 </div></div>
 
+<section><div class="wrap"><h2>Screenshots</h2><div class="shots only-dark"><figure><a href="screenshot-dark-kde.jpg"><img src="screenshot-dark-kde.jpg" alt="Vice Horizon dark on KDE Plasma 6" loading="lazy"></a><figcaption>KDE Plasma 6</figcaption></figure><figure><a href="screenshot-dark-cosmic.jpg"><img src="screenshot-dark-cosmic.jpg" alt="Vice Horizon dark on COSMIC" loading="lazy"></a><figcaption>COSMIC</figcaption></figure></div><div class="shots only-light"><figure><a href="screenshot-light-kde.jpg"><img src="screenshot-light-kde.jpg" alt="Vice Horizon light on KDE Plasma 6" loading="lazy"></a><figcaption>KDE Plasma 6</figcaption></figure><figure><a href="screenshot-light-cosmic.jpg"><img src="screenshot-light-cosmic.jpg" alt="Vice Horizon light on COSMIC" loading="lazy"></a><figcaption>COSMIC</figcaption></figure></div></div></section>
 <section><div class="wrap">
   <h2>Palette</h2>
   <div class="swatches only-dark"><div class="sw"><i style="background:#1D1A2E"></i><div><b>Background</b><span>#1D1A2E</span></div></div><div class="sw"><i style="background:#252239"></i><div><b>Surface</b><span>#252239</span></div></div><div class="sw"><i style="background:#2B2843"></i><div><b>Raised</b><span>#2B2843</span></div></div><div class="sw"><i style="background:#FEFCFC"></i><div><b>Text</b><span>#FEFCFC</span></div></div><div class="sw"><i style="background:#CEC9EA"></i><div><b>Muted</b><span>#CEC9EA</span></div></div><div class="sw"><i style="background:#EFA1A1"></i><div><b>Accent</b><span>#EFA1A1</span></div></div><div class="sw"><i style="background:#93D3AB"></i><div><b>Success</b><span>#93D3AB</span></div></div><div class="sw"><i style="background:#F9C8B2"></i><div><b>Warning</b><span>#F9C8B2</span></div></div><div class="sw"><i style="background:#F0776F"></i><div><b>Error</b><span>#F0776F</span></div></div></div><div class="swatches only-light"><div class="sw"><i style="background:#FBF5F4"></i><div><b>Background</b><span>#FBF5F4</span></div></div><div class="sw"><i style="background:#FEFCFC"></i><div><b>Surface</b><span>#FEFCFC</span></div></div><div class="sw"><i style="background:#F2E4E8"></i><div><b>Raised</b><span>#F2E4E8</span></div></div><div class="sw"><i style="background:#2F1F2B"></i><div><b>Text</b><span>#2F1F2B</span></div></div><div class="sw"><i style="background:#6B5165"></i><div><b>Muted</b><span>#6B5165</span></div></div><div class="sw"><i style="background:#857DB5"></i><div><b>Accent</b><span>#857DB5</span></div></div><div class="sw"><i style="background:#2F7D51"></i><div><b>Success</b><span>#2F7D51</span></div></div><div class="sw"><i style="background:#9A5320"></i><div><b>Warning</b><span>#9A5320</span></div></div><div class="sw"><i style="background:#B8352D"></i><div><b>Error</b><span>#B8352D</span></div></div></div>
@@ -114,12 +117,18 @@ pre { background: var(--deep); border: 1px solid var(--line); border-radius: 10p
   <h2>Install</h2>
   <div class="steps">
     <div><h3>KDE Plasma 6</h3>
-      <ol><li>Download <code>Vice-Horizon-0.1.0.zip</code> and unzip it.</li><li>Run the installer: a guided setup in the terminal. Nothing changes until you press Install.</li></ol>
-      <pre>cd Vice-Horizon-0.1.0
+      <ol><li>Download <code>Vice-Horizon-0.1.2.zip</code> and unzip it.</li><li>Run the installer: a guided setup in the terminal. Nothing changes until you press Install.</li></ol>
+      <pre>cd Vice-Horizon-0.1.2
 ./install.sh</pre>
       <p class="note">Afterwards, <code>vice-horizon dark</code> or <code>vice-horizon light</code> switches everything.</p></div>
     <div><h3>COSMIC</h3>
-      <ol><li>Download <code>Vice-Horizon-COSMIC-0.1.0.zip</code> (a separate download) and unzip it.</li><li>Run <code>./install.sh</code>: it puts the two theme files and the wallpapers in place. Nothing in COSMIC changes by itself.</li><li>Open COSMIC Settings › Desktop › Appearance, choose Dark or Light, then Import, and pick the matching <code>.ron</code> file.</li><li>Pick the wallpaper in Settings › Desktop › Wallpaper › Add image.</li></ol></div>
+      <ol><li>Download <code>Vice-Horizon-COSMIC-0.1.2.zip</code> (a separate download) and unzip it.</li><li>Run <code>./install.sh</code>: it puts the two theme files and the wallpapers in place. Nothing in COSMIC changes by itself.</li><li>Open COSMIC Settings › Desktop › Appearance, choose Dark or Light, then Import, and pick the matching <code>.ron</code> file.</li><li>Pick the wallpaper in Settings › Desktop › Wallpaper › Add image.</li></ol></div>
+  </div>
+  <h2>Needs (KDE panel)</h2>
+  <p class="note">The top panel uses two widgets made by other people. Vice Horizon doesn't bundle or change them, so you choose how to install them. The installer checks for both and asks before it fetches anything: from the AUR if you use yay or paru, otherwise from the KDE Store, installed for your user only (no password). Or exit, install them yourself, and come back. Without them the theme still installs and the panel is plainer.</p>
+  <div class="steps">
+    <div><h3>Panel Colorizer</h3><p class="note">by Luis Bocanegra. Gives the panel its look (not needed for the Standard look). Arch: <code>paru -S plasma6-applets-panel-colorizer</code>. Fedora and openSUSE: <code>plasma-panel-colorizer</code> from the author's repository. Any distro: right-click the panel › Add or manage widgets › Get new widgets, or <a href="https://store.kde.org/p/2130967">the KDE Store</a>.</p></div>
+    <div><h3>KVitals</h3><p class="note">by Yassine Amjad. CPU, RAM, GPU and network stats on the panel (needs lm_sensors). Arch: <code>paru -S plasma6-applets-kvitals-git</code>. Any distro: Get new widgets › KVitals, or <a href="https://github.com/yassine20011/kvitals">GitHub</a>.</p></div>
   </div>
 </div></section>
 
