@@ -434,7 +434,11 @@ def addons(ui, items, actions):
         intro_lines = len(textwrap.wrap(long_intro, max(20, w - 7), break_on_hyphens=False))
         tight = 8 + intro_lines + 1 + len(items) + 2 + 3 > h - 2
         y = 8
-        if tight:   # one line of intro, help right under Continue
+        # not even the one-line intro leaves room: no intro, and the add-ons that are already installed are not listed
+        squeeze = tight and 8 + 1 + 1 + len(need) + 1 + 1 > h - 2
+        if squeeze:
+            pass
+        elif tight:   # one line of intro, help right under Continue
             y = ui.wrap(y, 4, "Install now, or quit, install them yourself and come back.",
                         ui.c["muted"], max_lines=1) + 1
         else:
@@ -447,6 +451,8 @@ def addons(ui, items, actions):
         r = 0
         for i, (label, status, why, cmd) in enumerate(items):
             if status == "ok":
+                if squeeze:
+                    continue
                 ui.put(y, 4, f"✔ {label:<18}", ui.c["ok"])
                 ui.put(y, 25, "installed", ui.c["muted"])
                 y += 1

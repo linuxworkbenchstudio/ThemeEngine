@@ -373,7 +373,7 @@ t "--no-deps asks nothing and installs nothing" 'XDG_CURRENT_DESKTOP=KDE run_ins
 new_home cachy
 NOAUR="$TMP/noaur"; rm -rf "$NOAUR"; cp -a "$STUBS" "$NOAUR"; rm -f "$NOAUR/yay" "$NOAUR/paru"
 printf '#!/usr/bin/env bash\necho "pacman $*" >> "$STUB_STATE/calls.log"\n[[ "$1" == -Si && "$2" == paru ]]\n' > "$NOAUR/pacman"; chmod +x "$NOAUR/pacman"
-t "No AUR helper (Fedora, CachyOS...): the widgets are listed to get yourself" 'PATH="$NOAUR:${PATH//$STUBS:/}" XDG_CURRENT_DESKTOP=KDE run_inst --variant dark --install-deps --dry-run && grep -q "doesn.t bundle other people" "$TMP/out" && grep -q "Luis Bocanegra" "$TMP/out" && grep -q "Yassine Amjad" "$TMP/out" && ! grep -q "paru" "$TMP/out"'
+t "No AUR helper (Fedora, CachyOS...): the widgets are listed to get yourself" 'PATH="$NOAUR:${PATH//$STUBS:/}" XDG_CURRENT_DESKTOP=KDE run_inst --variant dark --install-deps --dry-run && grep -q "doesn.t bundle it" "$TMP/out" && grep -q "Luis Bocanegra" "$TMP/out" && grep -q "Yassine Amjad" "$TMP/out" && ! grep -q "paru" "$TMP/out"'
 t "  --deps-report says manual, with where to get them" 'PATH="$NOAUR:${PATH//$STUBS:/}" run_inst --deps-report && grep -q "^ITEM	KVitals	missing	.*	store:--kvitals:2347917 .*KDE Store" "$TMP/out" && grep -q "^ITEM	Panel Colorizer	missing	.*	store:--panel-colorizer:2130967 .*store.kde.org/p/2130967" "$TMP/out"'
 new_home widgets
 t "--yes carries on without the widgets and installs none" 'PATH="$NOAUR:${PATH//$STUBS:/}" run_inst --components kde-panel --variant dark --yes && [[ ! -e "$D/plasma/plasmoids" ]]'
