@@ -163,7 +163,7 @@ positive = "mint"
 osd_bg = "midnight_deep"
 
 [edition.dark.terminal]
-opacity = 0.94                  # subtle transparency, blurred behind
+opacity = 0.56                  # 44 % see-through, blurred behind
 blur = true
 #          black      red        green      yellow     blue       magenta    cyan       white
 normal = ["night_surface", "rose", "mint", "amber", "core_blue", "lavender", "#7FCDD9", "silver"]
@@ -214,7 +214,7 @@ positive = "mint_ink"
 osd_bg = "platinum"
 
 [edition.light.terminal]
-opacity = 0.96                  # subtle transparency, blurred behind
+opacity = 0.56                  # 44 % see-through, blurred behind
 blur = true
 #          black      red        green      yellow     blue       magenta    cyan       white
 normal = ["graphite", "rose_ink", "mint_ink", "amber_ink", "link_blue", "lavender_ink", "#1E7482", "slate_ink"]

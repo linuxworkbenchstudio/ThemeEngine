@@ -210,7 +210,7 @@ inactiveBackground = "base_bg"
 inactiveBlend = "base_bg"
 
 [edition.dark.terminal]
-opacity = 0.88
+opacity = 0.56                  # 44 % see-through, blurred behind
 blur = true
 #          black              red        green      yellow     blue       magenta    cyan       white
 normal = ["graphite_raised", "#D0686B", "#8DB277", "amber",   "#7A9CC6", "#B08BBB", "#6DADAD", "steel"]
@@ -287,7 +287,7 @@ inactiveBlend = "window_bg"
 [edition.light.terminal]
 background_intense = "view_alt_bg"
 foreground_intense = "dark.base_bg"
-opacity = 0.92
+opacity = 0.56                  # 44 % see-through, blurred behind
 blur = true
 normal = ["ink",     "#A63A3E", "#456B31", "#875818", "#3A5F95", "#7A4C88", "#2C6E6E", "slate"]
 bright = ["#4A5260", "#8E2E32", "#3D612B", "#704812", "#2E4E7D", "#663E73", "#225B5B", "light_line"]

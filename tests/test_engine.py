@@ -243,6 +243,17 @@ class Cosmic(unittest.TestCase):
             self.assertIn(expected, str(cm.exception))
 
 
+class KonsoleLook(unittest.TestCase):
+    def test_blur_and_44_percent_transparency_in_every_theme(self):
+        for pk in sorted((ROOT / "packs").iterdir()):
+            files = build(load(pk))
+            schemes = [t for n, t in files.items() if n.endswith(".colorscheme")]
+            self.assertTrue(schemes, pk.name)
+            for t in schemes:
+                self.assertIn("Blur=true\n", t, pk.name)
+                self.assertIn("Opacity=0.56\n", t, pk.name)
+
+
 if __name__ == "__main__":
     unittest.main()
 

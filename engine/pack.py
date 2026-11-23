@@ -62,7 +62,7 @@ TERMINAL_SETTINGS = {
     "background": "base_bg", "background_faint": None, "background_intense": "window_bg",
     "foreground": "text", "foreground_faint": "text_muted", "foreground_intense": "#FFFFFF",
     "faint_amount": 0.55,       # faint ANSI colours: this much of the colour over the background
-    "opacity": 1.0, "blur": False,
+    "opacity": 0.56, "blur": True,
 }
 
 THEME_KEYS = {"id", "name", "command", "brand", "version", "license", "editions", "names",
