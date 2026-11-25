@@ -274,7 +274,7 @@ def theme_page(pack, out: Path):
   <a class="brand" href="../">The Linux Workbench <small>themes</small></a>
   <span class="spacer"></span>
   <div class="switch" role="group" aria-label="Edition"><button data-show="dark" aria-pressed="true">Dark</button><button data-show="light" aria-pressed="false">Light</button></div>
-  <a class="navlink" href="{GITHUB}">GitHub</a>
+  <a class="navlink" href="../customiser/">Customiser</a> <a class="navlink" href="{GITHUB}">GitHub</a>
 </div></header>
 <main>
 <div class="{hero_cls}"><div class="wrap">
@@ -338,7 +338,7 @@ def home(cards, out: Path):
 <div class="dots">{''.join(f'<i style="background:{d}"></i>' for d in c['dots'])}</div></div></a>""")
     body = f"""<header class="top"><div class="wrap">
   <a class="brand" href="./">The Linux Workbench <small>themes</small></a>
-  <span class="spacer"></span><a class="navlink" href="{GITHUB}">GitHub</a>
+  <span class="spacer"></span><a class="navlink" href="customiser/">Customiser</a> <a class="navlink" href="{GITHUB}">GitHub</a>
 </div></header>
 <main class="wrap">
   <div class="intro"><h1>Desktop themes for workstations</h1>
@@ -352,12 +352,158 @@ def home(cards, out: Path):
                                     encoding="utf-8")
 
 
+CUSTOMISER_CSS = """
+.cz { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 28px; align-items: start; margin: 28px 0 48px; }
+@media (max-width: 820px) { .cz { grid-template-columns: 1fr; } }
+.cz h1 { font-size: 34px; margin: 28px 0 6px; } .cz-lead { color: var(--muted); max-width: 70ch; }
+.cz .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.cz label.sel { display: block; font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+.cz select { width: 100%; margin-top: 4px; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--raised); color: var(--text); font: inherit; }
+.cz .row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+.cz .row input[type=color] { width: 38px; height: 30px; border: 1px solid var(--line); border-radius: 6px; background: none; padding: 0; cursor: pointer; }
+.cz .row span { flex: 1; font-size: 14px; } .cz .row code { font-size: 12px; color: var(--muted); }
+.cz .warn { color: #e0a030; font-size: 13px; margin: 8px 0 0; }
+.cz .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.cz button.b { padding: 9px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--raised); color: var(--text); font: inherit; cursor: pointer; }
+.cz button.b.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: 600; }
+.cz .win { border-radius: 10px; overflow: hidden; border: 1px solid rgba(128,128,128,.35); margin-bottom: 18px; font-size: 14px; }
+.cz .win .tb { padding: 8px 12px; font-weight: 600; } .cz .win .bd { padding: 14px; display: grid; gap: 10px; }
+.cz .win .view { padding: 10px; border-radius: 6px; } .cz .win .sel { padding: 6px 10px; border-radius: 6px; display: inline-block; }
+.cz .win .btn2 { padding: 6px 12px; border-radius: 6px; display: inline-block; margin-right: 8px; }
+.cz .term { border-radius: 10px; padding: 14px; font: 13px/1.5 ui-monospace, "JetBrains Mono", monospace; white-space: pre; overflow: auto; }
+.cz .how { font-size: 14px; color: var(--muted); } .cz .how code { background: var(--raised); padding: 1px 5px; border-radius: 4px; }
+"""
+
+CUSTOMISER_JS = r"""
+const D = __DATA__;
+const $ = id => document.getElementById(id);
+const ROLES = [["Window","BackgroundNormal","Window background"],["View","BackgroundNormal","Content background"],
+  ["Button","BackgroundNormal","Buttons"],["Header","BackgroundNormal","Title bar"],["Selection","BackgroundNormal","Accent (selection)"],
+  ["Window","ForegroundNormal","Text"],["Window","ForegroundInactive","Muted text"],["Window","DecorationFocus","Focus ring"],
+  ["Window","ForegroundLink","Links"],["Selection","ForegroundNormal","Text on accent"]];
+let cur, map = {};
+const hex = rgb => "#" + rgb.split(",").map(n => (+n).toString(16).padStart(2,"0")).join("");
+const rgb = h => [1,3,5].map(i => parseInt(h.slice(i,i+2),16)).join(",");
+function get(text, group, key) {
+  const m = text.match(new RegExp("\\[Colors:" + group + "\\]([^\\[]*)")); if (!m) return null;
+  const k = m[1].match(new RegExp("^" + key + "=(\\d+,\\d+,\\d+)", "m")); return k ? k[1] : null;
+}
+function apply(text) {
+  return text.replace(/(=)(\d+,\d+,\d+)(?=\s|$)/g, (all, eq, c) => map[c] ? eq + map[c] : all);
+}
+function lum(c) { const v = c.split(",").map(n => { n/=255; return n<=.03928 ? n/12.92 : Math.pow((n+.055)/1.055,2.4); }); return .2126*v[0]+.7152*v[1]+.0722*v[2]; }
+function ratio(a,b) { const x = lum(a), y = lum(b); return (Math.max(x,y)+.05)/(Math.min(x,y)+.05); }
+function load() {
+  cur = D[$("theme").value][$("ed").value]; map = {};
+  const groups = {};   // original colour -> labels
+  ROLES.forEach(([g,k,label]) => { const c = get(cur.colors, g, k); if (c) (groups[c] = groups[c] || []).push(label); });
+  $("rows").innerHTML = "";
+  Object.entries(groups).forEach(([c, labels]) => {
+    const r = document.createElement("div"); r.className = "row";
+    r.innerHTML = `<input type="color" value="${hex(c)}" aria-label="${labels.join(", ")}"><span>${labels.join(" / ")}</span><code>${hex(c)}</code>`;
+    r.querySelector("input").oninput = e => { map[c] = rgb(e.target.value); r.querySelector("code").textContent = e.target.value; render(); };
+    $("rows").appendChild(r);
+  });
+  render();
+}
+function render() {
+  const t = apply(cur.colors), c = (g,k) => "rgb(" + get(t,g,k) + ")";
+  const w = $("win"); w.style.background = c("Window","BackgroundNormal"); w.style.color = c("Window","ForegroundNormal");
+  w.querySelector(".tb").style.background = c("Header","BackgroundNormal"); w.querySelector(".tb").style.color = c("Header","ForegroundNormal");
+  const v = w.querySelector(".view"); v.style.background = c("View","BackgroundNormal"); v.style.color = c("View","ForegroundNormal");
+  const s = w.querySelector(".sel"); s.style.background = c("Selection","BackgroundNormal"); s.style.color = c("Selection","ForegroundNormal");
+  w.querySelectorAll(".btn2").forEach(b => { b.style.background = c("Button","BackgroundNormal"); b.style.color = c("Button","ForegroundNormal"); });
+  w.querySelector("a").style.color = c("Window","ForegroundLink");
+  const k = apply(cur.konsole), kc = n => { const m = k.match(new RegExp("\\[" + n + "\\]\\s*Color=(\\d+,\\d+,\\d+)")); return "rgb(" + (m ? m[1] : "0,0,0") + ")"; };
+  const tm = $("term"); tm.style.background = kc("Background"); tm.style.color = kc("Foreground");
+  tm.innerHTML = `$ <span style="color:${kc("Color2")}">ls</span> ~/themes\n<span style="color:${kc("Color4")}">waypoint</span>  <span style="color:${kc("Color3")}">natura</span>  <span style="color:${kc("Color1")}">error.log</span>\n$ <span style="color:${kc("Color5")}">echo</span> "Hello"`;
+  const pairs = [["Window","ForegroundNormal","BackgroundNormal","text on window"],["View","ForegroundNormal","BackgroundNormal","text in content area"],
+    ["Selection","ForegroundNormal","BackgroundNormal","text on accent"],["Button","ForegroundNormal","BackgroundNormal","text on buttons"]];
+  const bad = pairs.map(([g,f,b,l]) => [l, ratio(get(t,g,f), get(t,g,b))]).filter(x => x[1] < 4.5);
+  $("warn").textContent = bad.length ? "Low contrast: " + bad.map(x => x[0] + " (" + x[1].toFixed(1) + ":1, aim for 4.5 or more)").join("; ") : "";
+}
+function save(text, name) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], {type: "text/plain"})); a.download = name; a.click();
+}
+function download(kind) {
+  const label = cur.name + " Custom";
+  if (kind === "colors") {
+    let t = apply(cur.colors).replace(/^ColorScheme=.*$/m, "ColorScheme=" + label.replace(/ /g, "")).replace(/^Name=.*$/m, "Name=" + label);
+    save(t, label.replace(/ /g, "-") + ".colors");
+  } else {
+    let t = apply(cur.konsole).replace(/^Description=.*$/m, "Description=" + label);
+    save(t, label.replace(/ /g, "-") + ".colorscheme");
+  }
+}
+Object.keys(D).forEach(id => { const o = document.createElement("option"); o.value = id; o.textContent = D[id].name; $("theme").appendChild(o); });
+$("theme").onchange = $("ed").onchange = () => { cur = null; load(); };
+$("reset").onclick = load; $("dl-colors").onclick = () => download("colors"); $("dl-konsole").onclick = () => download("konsole");
+function fixNames() { /* names per edition come from the data */ }
+load();
+"""
+
+
+def customiser(out: Path):
+    """site/customiser/: change a released theme's colours in the browser, download a KDE colour scheme and a Konsole
+    scheme. Everything is built here from the engine's own output, so the files match the real themes."""
+    from engine.parts.kde_colors import color_scheme
+    from engine.parts.konsole import colorscheme
+    data = {}
+    for pid in ORDER:
+        pack = load(ROOT / "packs" / pid)
+        if pack.raw.get("theme", {}).get("site", {}).get("status") == "coming-soon":
+            continue
+        data[pid] = {"name": pack.name}
+        for ed in pack.editions.values():
+            data[pid][ed.id] = {"name": pack.display(ed), "colors": color_scheme(pack, ed), "konsole": colorscheme(pack, ed)}
+    neutral_dark = ("--bg: #15171c; --deep: #0f1115; --surface: #1d2027; --raised: #262a33; --line: #2c3039; "
+                    "--text: #eef0f4; --muted: #a2a8b4; --accent: #9db8ff; --on-accent: #0f1115; --accent-rgb: 157, 184, 255;")
+    neutral_light = ("--bg: #f6f6f4; --deep: #ecece8; --surface: #ffffff; --raised: #f0f0ed; --line: #e1e1dc; "
+                     "--text: #1d2027; --muted: #5d6370; --accent: #3e63c9; --on-accent: #ffffff; --accent-rgb: 62, 99, 201;")
+    css = (BASE_CSS + HOME_CSS + CUSTOMISER_CSS + f":root {{ {neutral_dark} }}\n"
+           f"@media (prefers-color-scheme: light) {{ :root {{ {neutral_light} }} }}\n")
+    body = f"""<header class="top"><div class="wrap">
+  <a class="brand" href="../">The Linux Workbench <small>themes</small></a>
+  <span class="spacer"></span><a class="navlink" href="{GITHUB}">GitHub</a>
+</div></header>
+<main class="wrap cz-main">
+<h1>Colour customiser</h1>
+<p class="cz-lead">Start from a released theme, change its colours, and download a KDE colour scheme and a Konsole colour scheme of your own. It runs in your browser: nothing is uploaded. It changes colours only; icons, the panel, the Plasma Style and the wallpapers stay as in the theme.</p>
+<div class="cz">
+  <div class="panel">
+    <label class="sel">Theme<select id="theme"></select></label>
+    <label class="sel">Edition<select id="ed"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+    <div id="rows"></div>
+    <p class="warn" id="warn"></p>
+    <div class="btns"><button class="b primary" id="dl-colors">Download colour scheme</button>
+    <button class="b primary" id="dl-konsole">Download Konsole scheme</button><button class="b" id="reset">Reset</button></div>
+  </div>
+  <div>
+    <div class="win" id="win"><div class="tb">Preview: a window</div><div class="bd">
+      <div class="view">Content area <a href="#" onclick="return false">a link</a></div>
+      <div><span class="sel">Selected item</span></div>
+      <div><span class="btn2">Button</span><span class="btn2">Another</span></div></div></div>
+    <div class="term" id="term"></div>
+    <p class="how"><b>Use it.</b> Colour scheme: put the file in <code>~/.local/share/color-schemes/</code>, then pick it in System Settings › Colors &amp; Themes › Colors. Konsole scheme: put the file in <code>~/.local/share/konsole/</code>, then choose it in Konsole's profile settings › Appearance.</p>
+  </div>
+</div>
+</main>
+<footer><div class="wrap">The Linux Workbench · Made with <a href="{GITHUB}">The Linux Workbench theme engine</a> · <a href="{GITHUB}/issues">Report a problem</a> · <a href="mailto:{CONTACT}">{CONTACT}</a> · <a href="{KOFI}">Support on Ko-fi</a></div></footer>
+<script>{CUSTOMISER_JS.replace("__DATA__", json.dumps(data))}</script>"""
+    d = out / "customiser"
+    d.mkdir(parents=True)
+    (d / "index.html").write_text(page("Colour customiser — The Linux Workbench",
+                                       "Change a theme's colours in your browser and download your own KDE and Konsole colour schemes.",
+                                       css, body), encoding="utf-8")
+
+
 def build(out: Path = ROOT / "site") -> Path:
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
     cards = [theme_page(load(ROOT / "packs" / pid), out) for pid in ORDER]
     home(cards, out)
+    customiser(out)
     (out / ".nojekyll").write_text("")
     (out / "themes.json").write_text(json.dumps([{k: c[k] for k in ("id", "name", "tagline")} for c in cards], indent=1) + "\n")
     return out
