@@ -59,6 +59,8 @@ Questions or problems: [GitHub Issues](https://github.com/linuxworkbenchstudio/l
 
 ## For developers: how the themes are made
 
+**Experimental, no support.** The engine is published as is, under GPL-3.0-or-later. The pack format is still changing, so expect breaking changes, and issues about building your own packs may go unanswered. The themes above are the supported product.
+
 All themes come from one small engine: each theme is a *pack* (colours, names, artwork) and the engine writes every file from it, so a fix reaches every theme at once. `DESIGN.md` has the plan and the decisions.
 
 ```
