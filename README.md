@@ -59,6 +59,8 @@ Questions or problems: [GitHub Issues](https://github.com/linuxworkbenchstudio/l
 
 ## For developers: how the themes are made
 
+**Credit is required.** If you use the engine or make a theme with it, you must keep `NOTICE` and the copyright lines, and credit "The Linux Workbench theme engine" with a link to this repository in your README or about page and in your release notes or store listing. This is an additional term under section 7(b) of the GPL (see `NOTICE`).
+
 **Experimental, no support.** The engine is published as is, under GPL-3.0-or-later. The pack format is still changing, so expect breaking changes, and issues about building your own packs may go unanswered. The themes above are the supported product.
 
 All themes come from one small engine: each theme is a *pack* (colours, names, artwork) and the engine writes every file from it, so a fix reaches every theme at once. `DESIGN.md` has the plan and the decisions.
