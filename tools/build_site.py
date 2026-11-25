@@ -488,7 +488,7 @@ def customiser(out: Path):
   </div>
 </div>
 </main>
-<footer><div class="wrap">The Linux Workbench · Made with <a href="{GITHUB}">The Linux Workbench theme engine</a> · <a href="{GITHUB}/issues">Report a problem</a> · <a href="mailto:{CONTACT}">{CONTACT}</a> · <a href="{KOFI}">Support on Ko-fi</a></div></footer>
+<footer><div class="wrap">The Linux Workbench · Made by The Linux Workbench · <a href="{GITHUB}/issues">Report a problem</a> · <a href="mailto:{CONTACT}">{CONTACT}</a> · <a href="{KOFI}">Support on Ko-fi</a></div></footer>
 <script>{CUSTOMISER_JS.replace("__DATA__", json.dumps(data))}</script>"""
     d = out / "customiser"
     d.mkdir(parents=True)

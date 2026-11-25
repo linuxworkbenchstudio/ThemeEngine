@@ -54,38 +54,3 @@ The top panel uses two widgets made by other people. The themes don't bundle or 
 ## Help
 
 Questions or problems: [GitHub Issues](https://github.com/linuxworkbenchstudio/lwbs-themes/issues). Code is GPL-3.0-or-later; wallpapers are all rights reserved (free to use as wallpapers).
-
----
-
-## For developers: how the themes are made
-
-**Credit is required.** If you use the engine or make a theme with it, you must keep `NOTICE` and the copyright lines, and credit "The Linux Workbench theme engine" with a link to this repository in your README or about page and in your release notes or store listing. This is an additional term under section 7(b) of the GPL (see `NOTICE`).
-
-**Experimental, no support.** The engine is published as is, under GPL-3.0-or-later. The pack format is still changing, so expect breaking changes, and issues about building your own packs may go unanswered. The themes above are the supported product.
-
-All themes come from one small engine: each theme is a *pack* (colours, names, artwork) and the engine writes every file from it, so a fix reaches every theme at once. `DESIGN.md` has the plan and the decisions.
-
-```
-python3 -m engine check packs/waypoint             # check a pack: palette, contrast, ids, parts
-python3 -m engine build packs/waypoint --out dist  # write the theme's files
-python3 -m engine compare packs/waypoint           # how much of the released theme the engine reproduces
-python3 -m unittest discover -s tests -t . -v      # tests
-python3 tools/build_site.py                         # the website, into site/ (needs Pillow)
-```
-
-Python 3.11 or newer, nothing to install.
-
-## References
-
-`compare` checks the engine against each theme's last release, kept in `references/<pack>/`
-(not in the repository: tens of megabytes of icons). Fill it with:
-
-```
-python3 tools/import_reference.py vice-horizon Vice-Horizon-source.zip     # 1.8.2 source tree
-python3 tools/import_reference.py waypoint     Waypoint-KDE-0.5.0.zip      # the release zip
-```
-
-## Status
-
-Parts made by the engine: KDE colour schemes, Konsole colour schemes and profiles (Waypoint:
-identical to the release). The other parts move over one at a time; see `DESIGN.md`.
