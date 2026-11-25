@@ -286,7 +286,11 @@ class Site(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             out = build_site.build(Path(tmp) / "site")
             pages = sorted(out.rglob("index.html"))
-            self.assertEqual(len(pages), 1 + len(build_site.ORDER))
+            self.assertEqual(len(pages), 2 + len(build_site.ORDER))   # home, customiser, one per theme
+            cz = (out / "customiser" / "index.html").read_text(encoding="utf-8")
+            for released in ("waypoint", "vice-horizon", "natura"):
+                self.assertIn(f'"{released}"', cz)
+            self.assertNotIn('"core": {', cz)   # coming-soon themes are not offered
             for page in pages:
                 text = page.read_text(encoding="utf-8")
                 for ref in re.findall(r'(?:href|src)="([^"#?]+)"|url\(\'([^\']+)\'\)', text):
